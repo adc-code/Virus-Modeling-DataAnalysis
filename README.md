@@ -5,5 +5,6 @@ This contains for code for the SIR and SEIR models.  Implementations were done i
 The Javascript and D3 implementation can be interacted with here:
 
 [SIR Model in JS+D3](http://a-d-c.ca/wp-content/extraStuff/SIR_Model_D3.html)
+
 [SEIR Model in JS+D3](http://a-d-c.ca/wp-content/extraStuff/SEIR_Model_1w.html)
 
