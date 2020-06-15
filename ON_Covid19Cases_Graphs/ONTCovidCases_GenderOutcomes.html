@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+
+        <meta charset="utf-8">
+        <title>Ontario Covid Status Gender-Outcomes</title>
+        <script type="text/javascript" src="d3.v5.js"></script>
+
+        <style>
+
+            .button 
+            {
+                position:         relative;
+                text-align:       center;
+
+                float:            bottom;
+                vertical-align:   middle;
+
+                background-color: #cccccc;
+                border-radius:    7px;
+                border-style:     solid;
+                border-color:     white;
+                border-width:     3px;
+                width:            125px; 
+                padding:          7px 4px; 
+                font-family:      Helvetica, sans-serif;
+                font-size:        12px;
+                color:            #000000;
+                cursor:           pointer;
+
+                /* Prevent text selection */
+                -webkit-user-select: none;  /* Safari */
+                -ms-user-select:     none;  /* IE 10+ and Edge */
+                user-select:         none;  /* Standard syntax */
+            }
+
+            .button:hover
+            {
+                border-style:     solid;
+                border-color:     #ff4000;
+            } 
+
+            .button_sel
+            {
+                background-color: #4d4d4d;
+                color:            #ffffff;
+            }
+
+            .textOutput
+            {
+                font-family:      Helvetica, sans-serif;
+                font-size:        12px;
+                color:            #000000;
+            }
+
+            #tooltip
+            {
+                position: absolute;
+                width: 120px;
+                height: auto;
+                padding: 5px;
+                background-color: rgba(255, 255, 255, 0.9);
+                -webkit-border-radius: 10px;
+                -moz-border-radius: 10px;
+                border-radius: 10px;
+                -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                pointer-events: none;
+            }
+
+            #tooltip.hidden
+            {
+                display: none;
+            }
+
+            #tooltip p
+            {
+                margin: 0;
+                font-family: Helvetica, sans-serif;
+                font-size:   12px;
+                line-height: 14px;
+            }
+
+        </style>
+
+    </head>
+
+    <body>
+
+        <div id='AgeGraphContainer'>
+            <div id='graph'> </div>
+            <div id='controls' style='float: bottom'>
+                <div>
+                <div id='btnID_1' style='float:left; margin-left:130px' class='button datarange button_sel' stateID='0'> Absolute </div>
+                <div id='btnID_2' style='float:left' class='button datarange' stateID='1'> Percent  </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tooltip" class="hidden">
+            <p><span id='label'>text...</span></p>
+        </div>
+
+        <script type="text/javascript">
+
+           // Add a wide left margin so that the table seems centered
+            var CenterTable = function ()
+            {
+                var leftMargin = (window.innerWidth - 530) / 2;
+                d3.select ('#AgeGraphContainer').style ('margin-left', leftMargin + 'px');
+            }
+
+            // on creation of this page, center the results.
+            CenterTable ();
+
+            // Also re-center the table when the page was resized...
+            d3.select(window).on ('resize', function () { CenterTable (); } ); 
+
+            // The data...
+            var dataFile = 'ONCovidCases_GenderOutcomes.csv'; 
+
+            var dataset, xScale, yScale;
+
+            var selected = 0;
+
+            var maxAbsRow = [];
+            var maxAbsCol = [];
+
+            var colours_Outcomes = [ '#008000', '#e68a00', '#595959' ];
+            var colours_Genders  = []
+        
+            var labels_Genders = [ 'Female', 'Male', 'Other' ];
+            var labels_Outcomes = [ 'Resolved', 'Not Resolved', 'Fatal' ];
+ 
+            var dataRange = [ 0, 3 ];
+
+            // SVG Width, height, and some added spacing
+            var margin = {
+                    top:    15,
+                    right:  50,
+                    bottom:  5,
+                    left:   60
+            };
+
+            var width  = 530 - margin.left - margin.right;
+            var height = 190 - margin.top - margin.bottom;
+
+            var updateDuration = 500;
+
+
+            //
+            // Function used to parse the CSV.  
+            // 
+            var rowConverter = function (d) 
+            {
+                // console.log (d);
+
+                return [
+                    d[''], parseFloat (d['Resolved']), parseFloat (d['Not Resolved']), parseFloat (d['Fatal'])
+                ];  
+            }
+
+            //
+            // Read the CSV...
+            //
+            d3.csv (dataFile, rowConverter).then (function (data) 
+            {
+                // console.log (data);            
+                dataset = data;
+
+                // Find various Max values
+                var maxRow = [ 0, 0, 0 ];
+                var maxCol = [ 0, 0, 0 ];
+
+                for (var i = 0; i < 3; i++)
+                {
+                    for (var j = 0; j < 3; j++)
+                    {
+                        maxRow[i] = maxRow[i] + dataset[i][j+1]; 
+                        maxCol[i] = maxCol[i] + dataset[j][i+1];
+                    }
+                }
+
+                maxAbsRow = [ d3.max (maxRow), 100 ]; 
+                maxAbsCol = [ d3.max (maxCol), 100 ];
+
+                //console.log (maxAbsRow + ' ' + maxAbsCol);
+ 
+                var svg = d3.select ('#graph').append('svg')
+                            .attr ('width', width + margin.left + margin.right)
+                            .attr ('height', height + margin.top + margin.bottom)
+                            .append ('g')
+                            .attr ('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+ 
+                // Define the scales to convert our data to screen coordinates
+                xScale = d3.scaleLinear ()
+                           .domain ( [ 0, maxAbsRow[0] ] )
+                           .range ( [ 0, width ] ); 
+
+                yScale = d3.scaleLinear ()
+                           .domain ( [ 0, 3] )
+                           .range ( [ height, 0 ] ); 
+
+                var space     = yScale(1) - yScale(1.05);
+                var barHeight = yScale(1) - yScale(2);
+
+                for (var i = 0; i < 3; i++)
+                {
+                    var xPos = 0;
+                    for (var j = 0; j < 3; j++)
+                    {
+                        svg.append ('rect')
+                           .attr ('x', xScale (xPos))
+                           .attr ('y', yScale (3 - i) + space)
+                           .attr ('width', xScale (dataset[i][j+1]))
+                           .attr ('height', barHeight - space)
+                           .attr ('id', 'cell_' + i + j)
+                           .attr ('fill', colours_Outcomes[j])
+                           .attr ('barLabel', labels_Outcomes[j]) 
+                           .attr ('barValue', dataset[i][j+1])
+                           .on ('mousemove', function(d)
+                           {
+                                xPosition = d3.event.pageX; 
+                                yPosition = d3.mouse(this)[1] - 26;
+
+                                var outputStr = '';
+                                outputStr += d3.select(this).attr ('barLabel');
+                                outputStr += '<hr>';
+                                outputStr += d3.select(this).attr ('barValue');
+
+                                d3.select ('#tooltip')
+                                  .style ('left', xPosition + 'px')
+                                  .style ('top', yPosition + 'px')
+                                  .select ('#label').html ( outputStr ); 
+
+                                d3.select ('#tooltip').classed ('hidden', false);
+                          } )
+                          .on ('mouseout', function(d) 
+                          { 
+                              // Remove the tooltip
+                              d3.select ('#tooltip').classed ('hidden', true);
+                          } ); 
+
+                        xPos += dataset[i][j+1];
+
+                    } // for j
+
+                    svg.append ('text')
+                       .attr ('x', -10)
+                       .attr ('y', yScale (2.5 - i) + 5)
+                       .attr ('text-anchor', 'end')
+                       .text (labels_Genders[i])
+                       .attr ('class', 'textOutput')
+                       .attr ('id', 'label_' + i);
+ 
+                    svg.append ('text')
+                       .attr ('x', xScale(xPos) + 5)
+                       .attr ('y', yScale (2.5 - i) + 5)
+                       .text (xPos)
+                       .attr ('text-anchor', 'start')
+                       .attr ('class', 'textOutput')
+                       .attr ('id', 'output_' + i);
+                }
+
+
+                d3.selectAll ('.datarange').on ('click', function()
+                {
+                    // console.log ('dataRange button CB');  
+
+                    var selBtnID = +d3.select(this).node().getAttribute ('stateID');
+                    //console.log ('selBtnID  ' + selBtnID);  
+
+                    if (selBtnID != selected)
+                    {
+                        // update the UI
+                        d3.selectAll ('.datarange').classed ('button_sel', false);
+                        d3.select ('#btnID_' + (selBtnID + 1)).classed ('button_sel', true); 
+                    }
+                    else 
+                    {
+                        // do nothing...
+                        return;
+                    } 
+
+                    // update the range
+                    xScale.domain ( [ 0, maxAbsRow[selBtnID] ] );
+
+                    var offset = 0;
+                    var suffix = '';
+                    if (selBtnID == 1)
+                    {
+                        offset = 3;
+                        suffix = ' %'
+                    }
+
+                    // Get the data and modify the rects
+                    for (var i = 0; i < 3; i++)
+                    {   
+                        var xPos = 0;
+ 
+                        for (var j = 0; j < 3; j++)
+                        {   
+                            d3.select ('#cell_' + i + j)
+                              .transition ()
+                              .duration (updateDuration)
+                              .attr ('x', xScale (xPos)) 
+                              .attr ('y', yScale (3 - i) + space)
+                              .attr ('width', xScale (dataset[i + offset][j+1]))
+                              .attr ('height', barHeight - space)
+                              .attr ('fill', colours_Outcomes[j])
+                              .attr ('barValue', (dataset[i + offset][j+1]).toFixed(1) + suffix);
+                        
+                            xPos += dataset[i + offset][j+1];
+                        }
+                    
+                        if (selBtnID == 0)
+                        {
+                            d3.select ('#output_' + i) 
+                              .attr ('x', xScale(xPos) + 5)
+                              .attr ('y', yScale (2.5 - i) + 5)
+                              .attr ('text-anchor', 'start')
+                              .text (xPos)
+                              .transition ()
+                              .duration (updateDuration)
+                              .attr ('opacity', 1);
+                        }
+                        else if (selBtnID == 1)
+                        {
+                            d3.select ('#output_' + i) 
+                              .transition ()
+                              .duration (updateDuration)
+                              .attr ('opacity', 0);
+                        }
+
+                    } 
+
+                    selected = selBtnID;
+                } );
+
+            } );
+
+        </script>
+
+    </body>
+
+</html>
+
+
