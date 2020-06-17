@@ -8,21 +8,35 @@ DataFile = 'ONTCovidCases.csv'
 df_ONTCovidCases = pd.read_csv (DataFile)
 
 # Get the dates...
-dates = df_ONTCovidCases['Accurate_Episode_Date']
+dates = df_ONTCovidCases['Accurate_Episode_Date'].unique()
+dates = dates.tolist ()
+
+# clean the date list... from past experience the dates may have bad
+# data values and NaNs  
+datesClean = []
+for item in dates:
+    if (item == '2020-01-01' or item == '2020-01-10' or item != item):
+        continue
+    else:
+        datesClean.append (item)
 
 # sort the dates...
-sortedDates = dates.sort_values()
+datesClean.sort()
+
+# uncomment for debugging
+#print (datesClean)
 
 # Open a file to write this too
 f = open ('ONCovidCases_DateRange.csv', 'w')
 f.write ('start_date,end_date\n')
 
-# note... the dates are slightly messed up.  The first entry (at 0) is
-# after the second.  Also the first few sorted dates are either 12:00 or
-# January first, which are both incorrect.  Hence the starting date was
-# determined manually in pandas.
-f.write (dates.iloc[1] + ',' + sortedDates.max() + '\n')
 
-f.close ()
+# uncomment for debugging
+# print (datesClean[0] + '   ' + datesClean[ len(datesClean) - 1 ])
+
+f.write (datesClean[0] + ',' + datesClean[ len(datesClean) - 1 ] + '\n')
+
+
+#f.close ()
 
 
