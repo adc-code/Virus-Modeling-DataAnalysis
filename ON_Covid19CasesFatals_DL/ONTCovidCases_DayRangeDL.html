@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>D3 Page Template</title>
+        <script type="text/javascript" src="d3.v5.js"></script>
+
+        <style>
+            .block
+            {
+                float:            left; 
+                margin:           1px;
+                padding:          4px;
+                padding-top:      8px;
+                padding-bottom:   8px;
+                text-align:       center;
+                background-color: #cccccc;
+                width:            120px; 
+                font-family:      Helvetica, sans-serif;
+                font-size:        12px;
+                color:            #000000;
+            }
+        </style>
+
+    </head>
+
+    <body>
+
+        <div id='DeathRates' style='margin-left:30px'>
+            <div id='block_0' class='block' style='border-top-left-radius: 8px;border-bottom-left-radius: 8px'>a </div>
+            <div id='block_1' class='block' style='border-top-right-radius: 8px;border-bottom-right-radius: 8px'>c </div>
+            <div style='margin:20px;float:left'>  </div>
+            <div id='block_2' class='block' style='border-top-left-radius: 8px;border-bottom-left-radius: 8px'>a </div>
+            <div id='block_3' class='block' style='border-top-right-radius: 8px;border-bottom-right-radius: 8px'>c </div>
+        </div>
+
+        <script type="text/javascript">
+
+            // Add a wide left margin so that the table seems centered
+            var CenterTable = function ()
+            {
+                var leftMargin = (window.innerWidth - 570) / 2;
+                d3.select ('#DeathRates').style ('margin-left', leftMargin + 'px');
+            }
+
+            // on creation of this page, center the results.
+            CenterTable ();
+
+            // Also re-center the table when the page was resized...
+            d3.select(window).on ('resize', function () { CenterTable (); } );
+
+
+            var dataFile = 'ONCovidCases_PHUDailyChanges.csv';
+
+            //
+            // Function used to parse the CSV.  
+            // 
+            var rowConverter = function (d) 
+            {
+                var timeZoneAdjustment = 1000*60*60*5; // in millisecs...
+
+                return [  new Date (new Date (d['Dates']).getTime() + timeZoneAdjustment),  parseInt(d['Type'])  ];
+            };
+
+            //
+            // Read the CSV...
+            //
+            d3.csv (dataFile, rowConverter).then (function (data) 
+            {
+                console.log (data);
+
+                datasetBounds = [ ];
+
+                var startIndex = 0;
+                for (var type = 1; type <= 6; type++)
+                {
+                    var endIndex = data.length - 1;
+                    for (var i = startIndex; i < data.length; i++)
+                    {
+                        if (data[i][1] != type)
+                        {
+                            endIndex = i-1;
+                            break;
+                        }
+                    }
+
+                    datasetBounds.push ( [startIndex, endIndex] );
+                    startIndex = endIndex+1;
+                }
+                console.log ('datasetBounds: ');                
+                console.log (datasetBounds);
+
+                console.log ( data [ datasetBounds[0][0] ][0].toDateString() );
+                console.log ( data [ datasetBounds[0][1] ][0].toDateString() );
+                console.log ( data [ datasetBounds[3][0] ][0].toDateString() );
+                console.log ( data [ datasetBounds[3][1] ][0].toDateString() );
+ 
+                var labels = [ 'Cases Start Date', 'Cases End Date', 'Deaths Start Date', 'Deaths End Date' ];
+                var values = [ data [ datasetBounds[0][0] ][0],
+                               data [ datasetBounds[0][1] ][0],
+                               data [ datasetBounds[3][0] ][0], 
+                               data [ datasetBounds[3][1] ][0] ];
+
+                for (var i = 0; i < 4; i++)
+                {
+                    var output = '<strong>' + labels[i] + '</strong>';
+                    output += '<hr>';
+                    output += (values[i]).toDateString();
+
+                    d3.select ('#block_' + i).node().innerHTML = output;
+                }
+
+            } ); 
+
+        </script>
+
+    </body>
+
+</html>
+
+
