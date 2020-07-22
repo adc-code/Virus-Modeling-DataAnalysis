@@ -11,8 +11,10 @@ df_ONTCovidCases = pd.read_csv (DataFile)
 # all of the combinations of these categories...
 PHUNames     = df_ONTCovidCases['Reporting_PHU'].unique()
 OutcomeTypes = df_ONTCovidCases['Outcome1'].unique()
-AgeGroups    = df_ONTCovidCases['Age_Group'].unique()
 
+AgeGroups    = df_ONTCovidCases['Age_Group'].unique()
+AgeGroups    = AgeGroups.tolist()
+AgeGroups.remove ('UNKNOWN')
 
 # Remove any stray commas from the PHU name... since we are outputting 
 # a CSV file, they will result in badly parsed data.  Also put the
@@ -22,10 +24,15 @@ PHUNames.sort()
 
 PHUNamesClean = []
 for name in PHUNames:
-    if ',' in name:
-        PHUNamesClean.append (name.replace (',', ''))
-    else:
-        PHUNamesClean.append (name)
+    
+    #if ',' in name:
+    cleanName = name.replace (',', '');
+    cleanName = cleanName.replace ('&', 'and')
+
+    PHUNamesClean.append (cleanName)
+
+    #else:
+    #    PHUNamesClean.append (name)
 
 
 # add a total cases outcome type... Do the calculation here
@@ -41,7 +48,7 @@ columnNamesStr = 'PHU_Name,Outcome,' + ','.join(AgeGroups) + ',MaxValue'
 f.write (columnNamesStr + '\n')
 
 # uncomment for testing...
-# print (columnNamesStr)
+print (columnNamesStr)
 
 # Go through all the PHUs...
 for i in range(len(PHUNames)):
@@ -74,7 +81,7 @@ for i in range(len(PHUNames)):
         outputstr += ',' + str(max(values))
         
         # Uncomment for testing...   
-        # print (outputstr)
+        print (outputstr)
         
         # write data to the file
         f.write (outputstr + '\n')
