@@ -16,12 +16,16 @@ ageCaseData = {}
 for grp in ageGroups:
     ageCaseData[grp] = []
 
-# Make the index names...
-indexTypes = ['TotalCases']
-indexTypes.extend (outcomeTypes);
+# Manually reorder the indices...
+outcomeTypes = [ 'Resolved', 'Fatal', 'Not Resolved']
+indexTypes = ['TotalCases', 'Resolved', 'Fatal', 'Not Resolved']
+#indexTypes.extend (outcomeTypes);
 indexTypes.append (genderTypes[0]);
 indexTypes.append (genderTypes[1]);
 indexTypes.append ('Other')
+
+#print (indexTypes)
+#print (outcomeTypes)
 
 # Get all the values for each the age group 
 for grp in ageGroups:    
