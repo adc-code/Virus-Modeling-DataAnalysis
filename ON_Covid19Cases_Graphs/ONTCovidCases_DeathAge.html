@@ -66,9 +66,19 @@
             {
                 var dataset = data;
 
+                var FatalIndex = 0;
+                for (var i = 0; i < dataset.length; i++)
+                {
+                    if (dataset[i][0] == 'Fatal')
+                    {
+                        FatalIndex = i;
+                        break;
+                    }
+                }
+
                 var output = '<strong> Average Fatality Age </strong>';
                 output += '<hr>';
-                output += (dataset[1][1]).toFixed(1);
+                output += (dataset[FatalIndex][1]).toFixed(1);
 
                 d3.select ('#block_1').node().innerHTML = output;
 
