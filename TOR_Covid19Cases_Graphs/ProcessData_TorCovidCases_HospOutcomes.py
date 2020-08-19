@@ -10,13 +10,25 @@ OutcomeTypes = TorCaseData['Outcome'].unique()
 AgeGroups    = TorCaseData['Age Group'].unique()
 GenderTypes  = TorCaseData['Client Gender'].unique()
 
+#print (AgeGroups)
+
 OutcomeTypes = OutcomeTypes.tolist ()
 OutcomeTypes.append ('Total')
 
+
+# '50 to 59 Years' '20 to 29 Years' '60 to 69 Years' '80 to 89 Years' '70 to 79 Years' '30 to 39 Years' '40 to 49 Years' '19 and younger' nan '90 and older'
 AgeGroups    = AgeGroups.tolist ()
 AgeGroups    = [x for x in AgeGroups if str(x) != 'nan']
-ReorderedAgeGroups = ['19 and younger', '20-29', '30-39', '40-49', \
-                      '50-59', '60-69', '70-79', '80-89', '90+']
+
+AgeOrder = [ 19, 20, 30, 40, 50, 60, 70, 80, 90 ];
+ReorderedAgeGroups = []
+for age in AgeOrder:
+    for group in AgeGroups:
+        if group.find (str(age)) >= 0:
+            #print (group, '  ', age)
+            ReorderedAgeGroups.append (group)
+
+#ReorderedAgeGroups = ['19 and younger', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90+']
 AgeGroups = ReorderedAgeGroups
 #print (AgeGroups)
 
