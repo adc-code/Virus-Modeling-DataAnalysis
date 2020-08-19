@@ -212,6 +212,33 @@
 
 
             //
+            // Find data mapping...
+            //
+            var findDataMapping = function (dataset)
+            {
+                var TotalIndex       = 0;
+                var ResolvedIndex    = 0;
+                var NotResolvedIndex = 0;
+                var FatalIndex       = 0;
+
+                for (var i = 0; i < 4; i++)
+                {
+                    if (dataset[i][1] == 'Total Cases')
+                        TotalIndex = i;
+                    else if (dataset[i][1] == 'Resolved')
+                        ResolvedIndex = i;
+                    else if (dataset[i][1] == 'Not Resolved')
+                        NotResolvedIndex = i;
+                    else if (dataset[i][1] == 'Fatal')
+                        FatalIndex = i;
+                }
+
+                var mapping = [ TotalIndex, ResolvedIndex, NotResolvedIndex, FatalIndex ];
+
+                return mapping;
+            }
+
+            //
             // used to parse the CSV file properly
             //
             var rowConverter = function (d) 
@@ -341,6 +368,8 @@
                 {
                     //console.log (data);            
                     dataset = data;
+
+                    dataMapping = findDataMapping (dataset);
 
                     // highlight the default buttons
                     d3.select ('#DTbtn_' + currSelectedDataType).style ('background-color', DTBtnColours[currSelectedDataType]);
