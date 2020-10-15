@@ -206,7 +206,7 @@
             // SVG Width, height, and some added spacing
             var w         = 550;
             var h         = 300;
-            var padding   =  45;
+            var padding   =  55;
 
             // Empty, for now
             var dataset, xScale, yScale;
@@ -334,6 +334,8 @@
                 // 
                 var groupCount = [0, 0, 0, 0];
 
+                var disabledInitialState = [ 'Total patients approved for testing as of Reporting Date' ];
+
                 var colNames = dataset ['columns'];
                 for (var i = 0; i < colNames.length; i++)
                 {
@@ -352,9 +354,19 @@
                     newDiv.className = 'buttons lineBtn';
                     newDiv.classList.add ('linegrp_' + colGroupID [i]);
                     newDiv.setAttribute ('linenum', groupCount [ colGroupID[i] ] );
-                    newDiv.setAttribute ('state', 1 );
+
+                    if (disabledInitialState.indexOf (colNames[i]) >= 0)
+                    {
+                        newDiv.setAttribute ('state', 0 );
+                        newDiv.style.backgroundColor = "#cccccc";
+                    }
+                    else
+                    {
+                        newDiv.setAttribute ('state', 1 );
+                        newDiv.style.backgroundColor = colours [ groupCount[colGroupID[i]] ];
+                    }
+
                     newDiv.setAttribute ('grp',  colGroupID [i]);
-                    newDiv.style.backgroundColor = colours [ groupCount[colGroupID[i]] ];
 
                     newPara.appendChild (newContent);
                     newDiv.appendChild (newPara);
@@ -376,6 +388,9 @@
 
                 } // for i in colNames...
 
+                //
+                // Make the table below
+                //
                 for (var i = 0; i < colNames.length; i++)
                 {
                     // console.log (colNames[i]);
@@ -422,13 +437,23 @@
                     }
                 }
 
+                // Note that some things might have been disabled by default.  Remove them from the max values list
+                var tmpMax = [ 0 ];
+                d3.selectAll ('.linegrp_' + (currGroup))
+                  .each ( function (d, i)
+                  {
+                      if (d3.select(this).node().getAttribute ('state') == 1)
+                          tmpMax.push (maxValues[currGroup-1][i]);
+                  } );
+
                 // Define the scales to convert our data to screen coordinates
                 xScale = d3.scaleTime ()
                            .domain ( rangeValues [currGroup-1] )
                            .range ( [padding, w - 13] );                
 
                 yScale = d3.scaleLinear ()
-                           .domain ( [0, d3.max ( maxValues[currGroup-1] ) ] )
+                           //.domain ( [0, d3.max ( maxValues[currGroup-1] ) ] )
+                           .domain ( [0, d3.max ( tmpMax ) ] )
                            .range ( [h - padding, padding/2] );
 
                 // Define X axis
@@ -468,33 +493,44 @@
                 var d3Lines_Hosp  = [];
                 var d3Lines_LTC   = [];
 
+                var disabledDefaultState_Cases = []; 
+                var disabledDefaultState_Hosp  = [];
+                var disabledDefaultState_LTC   = [];
+
                 d3Lines_Cases.push (d3.line ()
                                 .x (function(d) { return xScale (d.date);           })
                                 .y (function(d) { return yScale (d.confirmedPos);   }) );
+                disabledDefaultState_Cases.push (0);
 
                 d3Lines_Cases.push (d3.line ()
                                 .x (function(d) { return xScale (d.date);           })
                                 .y (function(d) { return yScale (d.resolved);       }) );
+                disabledDefaultState_Cases.push (0);
 
                 d3Lines_Cases.push (d3.line ()
                                 .x (function(d) { return xScale (d.date);           })
                                 .y (function(d) { return yScale (d.deaths);         }) );
+                disabledDefaultState_Cases.push (0);
 
                 d3Lines_Cases.push (d3.line ()
                                 .x (function(d) { return xScale (d.date);           })
                                 .y (function(d) { return yScale (d.totalCases);     }) );
+                disabledDefaultState_Cases.push (0);
 
                 d3Lines_Cases.push (d3.line ()
                                 .x (function(d) { return xScale (d.date);           })
                                 .y (function(d) { return yScale (d.totalApproved);  }) );
+                disabledDefaultState_Cases.push (1);
 
                 d3Lines_Cases.push (d3.line ()
                                 .x (function(d) { return xScale (d.date);           })
                                 .y (function(d) { return yScale (d.totalCompleted); }) );
+                disabledDefaultState_Cases.push (0);
 
                 d3Lines_Cases.push (d3.line ()
                                 .x (function(d) { return xScale (d.date);           })
                                 .y (function(d) { return yScale (d.underInvest);    }) );
+                disabledDefaultState_Cases.push (0);
 
 
                 d3Lines_Hosp.push (d3.line ()
@@ -506,6 +542,7 @@
                                                       return yScale (0);
                                                   else
                                                       return yScale (d.numHosp);    }) );
+                disabledDefaultState_Hosp.push (0);
 
                 d3Lines_Hosp.push (d3.line ()
                                 .x (function(d) { if (d.date < rangeValues[1][0])
@@ -516,6 +553,7 @@
                                                       return yScale (0);
                                                   else
                                                       return yScale (d.numHospICU); }) );
+                disabledDefaultState_Hosp.push (0);
 
                 d3Lines_Hosp.push (d3.line ()
                                 .x (function(d) { if (d.date < rangeValues[1][0])
@@ -526,6 +564,7 @@
                                                       return yScale (0);
                                                   else
                                                       return yScale (d.numHospICUVent); }) );
+                disabledDefaultState_Hosp.push (0);
 
 
                 d3Lines_LTC.push (d3.line ()
@@ -537,6 +576,7 @@
                                                       return yScale (0);
                                                   else
                                                       return yScale (d.numLTCResCases); }) );
+                disabledDefaultState_LTC.push (0);
 
                 d3Lines_LTC.push (d3.line ()
                                 .x (function(d) { if (d.date < rangeValues[2][0])
@@ -547,6 +587,7 @@
                                                       return yScale (0);
                                                   else
                                                       return yScale (d.numLTCHCWCases); }) );
+                disabledDefaultState_LTC.push (0);
 
                 d3Lines_LTC.push (d3.line ()
                                 .x (function(d) { if (d.date < rangeValues[2][0])
@@ -557,6 +598,7 @@
                                                       return yScale (0);
                                                   else
                                                       return yScale (d.numLTCResDeaths);}) );
+                disabledDefaultState_LTC.push (0);
 
                 d3Lines_LTC.push (d3.line ()
                                 .x (function(d) { if (d.date < rangeValues[2][0])   
@@ -567,9 +609,10 @@
                                                       return yScale (0);
                                                   else
                                                       return yScale (d.numLTCHCWDeaths);}).curve (d3.curveStepAfter) );
+                disabledDefaultState_LTC.push (0);
 
                 d3Lines = [ d3Lines_Cases, d3Lines_Hosp, d3Lines_LTC ];
-
+                disabledDefaultState = [ disabledDefaultState_Cases, disabledDefaultState_Hosp, disabledDefaultState_LTC ];
 
                 var queryLine = d3.line ()
                                   .x (function(d) { return xScale (d.t); })
@@ -586,6 +629,9 @@
                         var opacity = 0;
                         if ( (i+1) == currGroup )
                             opacity = 1;
+
+                        if ( disabledDefaultState[i][j] == 1 )
+                            opacity = 0;
 
                         var newPath = svg.append ('path')
                                          .datum (dataset)
