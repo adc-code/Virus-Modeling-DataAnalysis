@@ -263,7 +263,7 @@
                     parseFloat (d['Sudbury']),                                 parseFloat (d['Thunder Bay']),                   // 28 29
                     parseFloat (d['Timiskaming']),                             parseFloat (d['Toronto']),                       // 30 31
                     parseFloat (d['Waterloo']),                                parseFloat (d['Wellington Dufferin Guelph']),    // 32 33
-                    parseFloat (d['Windsor-Essex']),                           parseFloat (d['York']),                          // 34 35                         
+                    parseFloat (d['Windsor-Essex']),                           parseFloat (d['York']),                          // 34 35
                 ];  
             }
 
@@ -425,7 +425,7 @@
                 var dataIndex = 2;
                 for (var i = 0; i < dataset.columns.length; i++)
                 {
-                    if (dataset.columns[i] == 'Dates' || dataset.columns[i] == 'Type')
+                    if (dataset.columns[i] == 'Dates' || dataset.columns[i] == 'Type' || dataset.columns[i] == 'Not Reported') 
                         continue;
 
                     var newOption = document.createElement ('option');
