@@ -11,16 +11,21 @@ df_ONTCovidCases = pd.read_csv (DataFile)
 
 # Get all the gender types...
 genders = df_ONTCovidCases['Client_Gender'].unique()
+genders = [x for x in genders if str(x) != 'nan']
+
+#print ('genders: ', genders)
 
 # Find all of the outcomes by gender...
 results = []
 for genderType in genders:
     genderOutcomeDF = df_ONTCovidCases[df_ONTCovidCases['Client_Gender'] == genderType]
-    
+   
     genderOutcomes  = genderOutcomeDF['Outcome1'].value_counts()
     genderOutcomes  = genderOutcomes.rename (genderType + '_Outcome')
     
     results = results + [genderOutcomes]
+
+#print ('results: ', results)
 
 
 # From previous investigations, add together UNKNOWN, OTHER, and TRANSGENDER
@@ -31,7 +36,9 @@ Other_Outcomes = pd.Series ()
 outcomeTypes = df_ONTCovidCases['Outcome1'].unique() 
 for outType in outcomeTypes:
     typeTotal = 0
-    for i in range (2,5):
+    # note that the first two results are always male and female.  Also once the data had other 
+    # types of genders and now have been merged together into 'Gender Diverse'.
+    for i in range (2,len(results)-1):
         if outType in results[i]:
            typeTotal = typeTotal + results[i][outType]
         
