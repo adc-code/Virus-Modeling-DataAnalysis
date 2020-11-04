@@ -195,7 +195,30 @@
             // UI state
             var maxValues   = [];
             var rangeValues = [];
-            var colGroupID  = [ -2,   -1, -1, -1,    1, 1, 1, 1, 1, 1, 1,    2, 2, 2,    3, 3, 3, 3 ];
+            var colGroupID  = [ -2,    // Reported Date
+
+                                -1,    // Confirmed Negative    
+                                -1,    // Presumptive Negative  
+                                -1,    // Presumptive Positive
+
+                                 1,    // Confirmed Positive
+                                 1,    // Resolved
+                                 1,    // Deaths
+                                 1,    // Total Cases
+                                 1,    // Total patients approved for testing as of Reporting Date
+                                 1,    // Total tests completed in the last day
+                                -1,    // Percent positive tests in last day 
+                                 1,    // Under Investigation
+
+                                 2,    // Number of patients hospitalized with COVID-19
+                                 2,    // Number of patients in ICU with COVID-19
+                                 2,    // Number of patients in ICU on a ventilator with COVID-19
+ 
+                                 3,    // Total Positive LTC Resident Cases
+                                 3,    // Total Positive LTC HCW Cases
+                                 3,    // Total LTC Resident Deaths
+                                 3 ];  // Total LTC HCW Deaths
+
 
             var currGroup   = 1;
             var colours     = d3.schemeCategory10;
@@ -266,6 +289,9 @@
                 if (d['Total LTC HCW Deaths'] == '')
                     d['Total LTC HCW Deaths'] = 0;
 
+                if (d['Percent positive tests in last day'] == '')
+                    d['Percent positive tests in last day'] = 0;
+
                 return {
                     // Note that we need to convert to the correct timezone
                     date:            new Date (new Date (d['Reported Date']).getTime() + 1000*60*60*5),
@@ -324,7 +350,10 @@
 
                 maxValues = [ maxValues_Cases, maxValues_Hosp, maxValues_LTC ];
 
-
+                // Note that the 0, 46, and 93 might seem a bit strange but they are just offsets from where
+                // the data has meaning.  The first set of data starts from the beginning (hence 0 offset),
+                // the second with hospitalization started being reported 46 days later, and the final set
+                // related to long term care centres was reported from 93 days later.
                 rangeValues = [ [ dataset[ 0].date, dataset[dataset.length - 1].date ], 
                                 [ dataset[46].date, dataset[dataset.length - 1].date ], 
                                 [ dataset[93].date, dataset[dataset.length - 1].date ]  ];
@@ -339,7 +368,7 @@
                 var colNames = dataset ['columns'];
                 for (var i = 0; i < colNames.length; i++)
                 {
-                    // console.log (colNames[i]);
+                    console.log (colNames[i]);
 
                     // skip cols we don't want to deal with
                     if (colGroupID [i] < 0)
