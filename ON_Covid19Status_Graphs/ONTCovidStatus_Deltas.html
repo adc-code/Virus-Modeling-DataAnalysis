@@ -176,13 +176,13 @@
             // UI state
             var DataLength = 21;
             var barPadding = 2;
-            var Catagories = [ 1, 2, 3, 8, 11, 13 ];
-            var ColumnIdx  = [ 4, 5, 6, 11, 14, 16 ];
+            var Catagories = [ 1, 2, 3, 4, 8, 11, 13 ];
+            var ColumnIdx  = [ 4, 5, 6, 7, 12, 15, 17 ];
 
             var ToolTipLabels = [ 'New Infections: ', 'Cases Resolved: ', 'Additional Deaths: ',
-                                  'Hospitalized: ',  'New LTC Infections: ', 'Additional LTC Deaths: '];
+                                  'New Cases: ',  'Hospitalized: ', 'New LTC Infections: ', 'Additional LTC Deaths: '];
 
-            var AddSpace   = [ 2, 3 ]; 
+            var AddSpace   = [ 3, 4 ]; 
 
             // ??? start data date
 
@@ -190,7 +190,7 @@
             var rangeValues = [];
 
             var colours     = d3.schemeCategory10;
-            var colourIndex = [ 0, 1, 2, 0, 0, 2 ];
+            var colourIndex = [ 0, 1, 2, 3, 0, 0, 2 ];
          
             var currSelected = 0;
 
@@ -211,7 +211,7 @@
             // 
             var rowConverter = function (d) 
             {
-                //console.log (d);
+                // console.log (d);
 
                 // This isn't the best piece of code... perhaps there is a better way to deal with NAs
                 if (d['Confirmed Positive'] == '')
@@ -255,6 +255,10 @@
 
                 if (d['Total LTC HCW Deaths'] == '')
                     d['Total LTC HCW Deaths'] = 0;
+
+                if (d['Percent positive tests in last day'] == '')
+                    d['Percent positive tests in last day'] = 0;
+
 
                 return [
                     // Note that we need to convert to the correct timezone
@@ -307,7 +311,7 @@
                         diff.push ( dataset[ j ][ Catagories[i] ] - dataset[ j - 1 ][ Catagories[i] ] );
                     }
 
-                    //console.log ('Adding... ' + Catagories[i] + '  ' + data['columns'][ Catagories[i] ] );
+                    console.log ('Adding... ' + Catagories[i] + '  ' + data['columns'][ Catagories[i] ] );
                     Differences.push (diff);
 
                     minValues.push ( d3.min(diff) );
@@ -548,7 +552,7 @@
                     svg.selectAll ('rect')
                        .data (Differences[num])
                        .transition ()
-                       .delay ( function(d, i) { return i * 50; }) 
+                       .delay ( function(d, i) { return i * 30; }) 
                        .duration (updateDuration)
                        .attr ('x', function (d, i) 
                        { 
