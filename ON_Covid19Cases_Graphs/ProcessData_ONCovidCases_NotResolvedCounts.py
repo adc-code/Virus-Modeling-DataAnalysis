@@ -21,6 +21,7 @@ NotResolvedDF = df_ONTCovidCases[df_ONTCovidCases['Outcome1'] == 'Not Resolved']
 
 # get the required dates...
 dates = list (NotResolvedDF['Accurate_Episode_Date'].unique())
+dates = [x for x in dates if str(x) != 'nan']
 dates.sort()
 
 

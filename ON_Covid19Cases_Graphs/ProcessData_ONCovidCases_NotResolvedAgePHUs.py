@@ -8,13 +8,17 @@ df_ONTCovidCases = pd.read_csv (DataFile)
 # get the age groups... note that we remove the unknown group
 ageGroups = df_ONTCovidCases['Age_Group'].unique()
 ageGroupList = list (ageGroups)
-ageGroupList.remove ('Unknown')
+
+# remove any unwanted stuff from the age group list
+ageGroupList = [x for x in ageGroupList if str(x) != 'nan']
+ageGroupList.remove ('UNKNOWN')
 
 # make a dataframe for the not resolved group
 NotResolvedDF = df_ONTCovidCases[df_ONTCovidCases['Outcome1'] == 'Not Resolved']
 
 # get the dates and sort them...
 dates = list (NotResolvedDF['Accurate_Episode_Date'].unique())
+dates = [x for x in dates if str(x) != 'nan']
 dates.sort ()
 
 # get the last elements
