@@ -687,9 +687,6 @@
                    .attr ('stroke', '#333333')
                    .attr ('d', queryLine);
 
-
-            
-
                 // Make an empty rectangle to handle mouse move events...
                 svg.append ('rect') 
                    .attr ('width', w)     
@@ -956,48 +953,48 @@
                                 d3.selectAll ('#Out_' + currGroup + '_8').html ('-');
 
                             if (vizState[6])
-                                d3.selectAll ('#Out_' + currGroup + '_9').html (dataset[index].underInvest);
+                                d3.selectAll ('#Out_' + currGroup + '_10').html (dataset[index].underInvest);
                             else
-                                d3.selectAll ('#Out_' + currGroup + '_9').html ('-');
+                                d3.selectAll ('#Out_' + currGroup + '_10').html ('-');
                         }
                         else if (currGroup == 2)
                         {
                             if (vizState[0])
-                                d3.selectAll ('#Out_' + currGroup + '_10').html (dataset[index].numHosp);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_10').html ('-');
-
-                            if (vizState[1])
-                                d3.selectAll ('#Out_' + currGroup + '_11').html (dataset[index].numHospICU);
+                                d3.selectAll ('#Out_' + currGroup + '_11').html (dataset[index].numHosp);
                             else
                                 d3.selectAll ('#Out_' + currGroup + '_11').html ('-');
 
-                            if (vizState[2])
-                                d3.selectAll ('#Out_' + currGroup + '_12').html (dataset[index].numHospICUVent);
+                            if (vizState[1])
+                                d3.selectAll ('#Out_' + currGroup + '_12').html (dataset[index].numHospICU);
                             else
                                 d3.selectAll ('#Out_' + currGroup + '_12').html ('-');
+
+                            if (vizState[2])
+                                d3.selectAll ('#Out_' + currGroup + '_13').html (dataset[index].numHospICUVent);
+                            else
+                                d3.selectAll ('#Out_' + currGroup + '_13').html ('-');
                         }
                         else if (currGroup == 3)
                         {
                             if (vizState[0])
-                                d3.selectAll ('#Out_' + currGroup + '_13').html (dataset[index].numLTCResCases);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_13').html ('-');
-
-                            if (vizState[1])
-                                d3.selectAll ('#Out_' + currGroup + '_14').html (dataset[index].numLTCHCWCases);
+                                d3.selectAll ('#Out_' + currGroup + '_14').html (dataset[index].numLTCResCases);
                             else
                                 d3.selectAll ('#Out_' + currGroup + '_14').html ('-');
 
-                            if (vizState[2])
-                                d3.selectAll ('#Out_' + currGroup + '_15').html (dataset[index].numLTCResDeaths);
+                            if (vizState[1])
+                                d3.selectAll ('#Out_' + currGroup + '_15').html (dataset[index].numLTCHCWCases);
                             else
                                 d3.selectAll ('#Out_' + currGroup + '_15').html ('-');
 
-                            if (vizState[3])
-                                d3.selectAll ('#Out_' + currGroup + '_16').html (dataset[index].numLTCHCWDeaths);
+                            if (vizState[2])
+                                d3.selectAll ('#Out_' + currGroup + '_16').html (dataset[index].numLTCResDeaths);
                             else
-                                d3.selectAll ('#Out_' + currGroup + '_16').html ('-');
+                                d3.selectAll ('#Out_' + currGroup + '_17').html ('-');
+
+                            if (vizState[3])
+                                d3.selectAll ('#Out_' + currGroup + '_17').html (dataset[index].numLTCHCWDeaths);
+                            else
+                                d3.selectAll ('#Out_' + currGroup + '_17').html ('-');
                         }
 
                     } // if within limits
