@@ -310,7 +310,10 @@ function canvasApp ()
 
             SimState = SIM_STATE_PLAY;
             document.getElementById ('StartBtn').innerHTML = 'Stop';
-                    
+
+            document.getElementById ('ResetBtn').disabled  = true;                    
+            document.getElementById ('ResetBtn').classList = ['button disabledbutton'];
+
             document.getElementById ('initSpeedList').disabled  = true;
             document.getElementById ('totalPopList').disabled   = true;
             document.getElementById ('initInfectList').disabled = true;
@@ -336,6 +339,9 @@ function canvasApp ()
             SimState = SIM_STATE_STOP;
             document.getElementById ('StartBtn').innerHTML = 'Start';
  
+            document.getElementById ('ResetBtn').disabled  = false;
+            document.getElementById ('ResetBtn').classList = ['button enabledbutton'];
+                    
             document.getElementById ('initSpeedList').disabled  = false;
             document.getElementById ('totalPopList').disabled   = false;
             document.getElementById ('initInfectList').disabled = false;
@@ -344,6 +350,36 @@ function canvasApp ()
 
             // Stop the simulation 
             clearTimeout (SimTimerId);
+        }
+    }
+
+
+    //
+    // OnResetButtonClick: callback to handle the start/top button
+    //
+    function OnResetButtonClick ()
+    {
+        if (document.getElementById ('ResetBtn').disabled == false)
+        {
+            InitialSpeed = SPEEDS [2];
+            document.getElementById ('initSpeedList').value = 2;
+
+            NumBalls = 100;
+            document.getElementById ('totalPopList').value = NumBalls;
+
+            InitialInfections = 1;
+            document.getElementById ('initInfectList').value = InitialInfections;
+            
+            InfectionRate = 0.75;
+            document.getElementById ('infRateSlider').value  = Math.round (100 * InfectionRate);
+            document.getElementById ('infRateTextBox').value = Math.round (100 * InfectionRate) + '%';
+
+            // Make the balls and draw the screen once	
+            GenerateBalls (); 
+            drawScreen ();
+
+            document.getElementById ('msgBox').style.display = 'none';
+            UpdatedParams = false;
         }
     }
 
@@ -401,6 +437,7 @@ function canvasApp ()
 	
     // register all the callbacks...
     document.getElementById ('StartBtn').addEventListener ('click', OnStartButtonClick);
+    document.getElementById ('ResetBtn').addEventListener ('click', OnResetButtonClick);
     document.getElementById ('initSpeedList').addEventListener ('change', OnInitSpeedListChange);
     document.getElementById ('totalPopList').addEventListener ('change', OnTotalPopListChange);
     document.getElementById ('initInfectList').addEventListener ('change', OnInitInfectListChange);
