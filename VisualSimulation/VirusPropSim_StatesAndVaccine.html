@@ -1,0 +1,225 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Virus Propagation with States and Vaccine</title>
+
+    <style>
+
+        .button
+        {
+            width:            178px;
+            padding:          4px;
+            margin:           2px;
+            margin-right:     0px;
+            cursor:           pointer;
+            font-family:      Helvetica, sans-serif;
+            font-size:        12px;
+            text-align:       center;
+            border-radius:    5px;
+            border-width:     thin;
+            border-style:     solid;
+            border-color:     #000;
+            color:            #fff;
+        }
+
+        .enabledbutton
+        {
+            background-color: #005580;
+        }
+
+        .enabledbutton:hover
+        {
+            background-color: #0088cc;
+        }
+
+        .disabledbutton
+        {
+            background-color: #dddddd;
+            color:            #333333;
+            cursor:           default;
+        } 
+
+        .label
+        {
+            font-family:      Helvetica, sans-serif;
+            font-size:        12px;
+            padding-top:      3px;
+        }
+
+        .dataInput 
+        {
+            background-color: #ccc;
+            padding:          4px;
+            margin:           0px;
+            margin-right:     0px;
+            border-radius:    5px;
+            border-width:     thin;
+            border-style:     solid;
+            border-color:     #000;
+            height: 20px; 
+        }
+
+        #msgBox
+        {
+            font-family:      Helvetica, sans-serif;
+            font-size:        12px;
+            background-color: #ffcc99;
+            width:            178px;
+            padding:          4px;
+            margin:           2px;
+        }
+
+    </style>
+
+    <script src='VirusPropSim_StatesAndVaccine.js'></script>
+
+    <script type='text/javascript'>
+
+        window.addEventListener ('load', eventWindowLoaded, false);	
+
+        //
+        // eventWindowLoaded: used to be sure that everything has been loaded first 
+        // 
+        function eventWindowLoaded ()
+        {
+            MakeLegend ();
+            canvasApp ();
+        }
+
+    </script>
+
+</head>
+
+
+<body> 
+
+    <div id='controls' style='float:left;margin-right:7px'>
+
+        <div id='StartBtn' class='button enabledbutton'>Start</div>
+
+        <div style='height:3px'> </div>
+
+        <div id='ResetBtn' class='button enabledbutton'>Reset</div>
+
+        <div style='height:15px'> </div>
+
+        <div class='dataInput'>
+            <div class='label' style='float: left'>Initial Speed: </div>                
+            <select id='initSpeedList' name='initSpeedList' style='width:70px;float:right'>
+                <option value='0'>Slowest</option>
+                <option value='1'>Slow</option>
+                <option value='2' selected>Normal</option>
+                <option value='3'>Fast</option>
+                <option value='4'>Fastest</option>
+            </select>
+        </div>
+
+        <div style='height:5px'> </div>
+
+        <div class='dataInput'>
+            <div class='label' style='float: left'>Total Population: </div>                
+            <select id='totalPopList' name='totalPopList' style='width:65px;float:right'>
+                <option value='25'>25</option>
+                <option value='50'>50</option>
+                <option value='100' selected>100</option>
+                <option value='200'>200</option>
+                <option value='400'>400</option>
+            </select>
+        </div>
+
+        <div style='height:5px'> </div>
+
+        <div class='dataInput'>
+            <div class='label' style='float: left'>Initial Infections: </div>                
+            <select id='initInfectList' name='initInfectList' style='width:65px;float:right'>
+                <option value='1' selected>1</option>
+                <option value='2'>2</option>
+                <option value='5'>5</option>
+                <option value='10'>10</option>
+            </select>
+        </div>
+
+        <div style='height:5px'> </div>
+
+        <div class='dataInput' style='height: 40px'>
+            <div>
+            <div class='label' style='float:left'>Infection Rate: </div>
+                <input id='infRateTextBox' style='width:40px;float:right;text-align: center;' value='75%' readonly/> 
+            </div>
+            <input id='infRateSlider' style='width:170px' type='range' min='0' max='100' step='1' value='75'/>
+        </div>
+
+        <div style='height:5px'> </div>
+
+        <div class='dataInput' style='height: 40px'>
+            <div>
+            <div class='label' style='float:left'>Infection Time: </div>
+                <input id='infTimeTextBox' style='width:30px;float:right;text-align: center;' value='15' readonly/> 
+            </div>
+            <input id='infTimeSlider' style='width:170px' type='range' min='0' max='50' step='1' value='15'/>
+        </div>
+
+        <div style='height:5px'> </div>
+
+        <div class='dataInput' style='height: 40px'>
+            <div>
+            <div class='label' style='float:left'>Death Rate: </div>
+                <input id='deathRateTextBox' style='width:40px;float:right;text-align: center;' value='3%' readonly/> 
+            </div>
+            <input id='deathRateSlider' style='width:170px' type='range' min='0' max='100' step='1' value='3'/>
+        </div>
+
+        <div style='height:5px'> </div>
+
+        <div class='dataInput' style='height: 40px'>
+            <div>
+            <div class='label' style='float:left'>Initial Vaccinations: </div>
+                <input id='initVaxTextBox' style='width:40px;float:right;text-align: center;' value='25%' readonly/> 
+            </div>
+            <input id='initVaxSlider' style='width:170px' type='range' min='0' max='100' step='1' value='25'/>
+        </div>
+
+        <div style='height:5px'> </div>
+
+        <div class='dataInput' style='height: 40px'>
+            <div>
+            <div class='label' style='float:left'>Vaccine Effectiveness: </div>
+                <input id='vaxEffTextBox' style='width:40px;float:right;text-align: center;' value='95%' readonly/> 
+            </div>
+            <input id='vaxEffSlider' style='width:170px' type='range' min='0' max='100' step='1' value='95'/>
+        </div>
+
+        <div style='height:30px'> </div>
+
+        <div id='msgBox' style='display:none;'>
+            Note:
+            <hr>
+            Changing parameters will result in a reset of the simulation!
+        </div>
+
+    </div>    
+
+    <div style='float: left; position:relative; display:inline-block;'>
+
+        <canvas id='canvasSimArea' width='500' height='500'>
+            Your browser does not support the HTML 5 Canvas. 
+        </canvas>
+
+        <div style='height:1px'> </div>
+
+        <canvas id='canvasLegend' width='500' height='30'>
+            Your browser does not support the HTML 5 Canvas. 
+        </canvas>
+
+    </div>
+
+</body>
+
+</html>
+
+
+
+
