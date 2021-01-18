@@ -674,14 +674,15 @@ function MakeLegend ()
         context.strokeRect (1,  1, theCanvas.width-2, theCanvas.height-2);
 
         // draw the balls
-        var labelWidth = 0.9 * theCanvas.width / 4;
-        var xSpace = (theCanvas.width - 4 * labelWidth) / 2;
+        var labelWidth = 0.95 * theCanvas.width / 5;
+        var xSpace = (theCanvas.width - 5 * labelWidth) / 1.5;
         var ySpace = theCanvas.height / 2;
 
         drawBall (xSpace,                ySpace, '#ffffff', 'Susceptable');
-        drawBall (xSpace + labelWidth,   ySpace, '#ff0000', 'Infected');
-        drawBall (xSpace + 2*labelWidth, ySpace, '#9966ff', 'Recovered'); 
-        drawBall (xSpace + 3*labelWidth, ySpace, '#404040', 'Dead');
+        drawBall (xSpace +   labelWidth, ySpace, '#6699ff', 'Vaccinated');
+        drawBall (xSpace + 2*labelWidth, ySpace, '#ff0000', 'Infected');
+        drawBall (xSpace + 3*labelWidth, ySpace, '#9966ff', 'Recovered'); 
+        drawBall (xSpace + 4*labelWidth, ySpace, '#404040', 'Dead');
     }
 
     theCanvas = document.getElementById ('canvasLegend');
