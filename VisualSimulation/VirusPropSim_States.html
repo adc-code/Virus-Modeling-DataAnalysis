@@ -78,6 +78,24 @@
 
     <script type='text/javascript'>
 
+        // Add a wide left margin so that the contents seem centered
+        function CenterContents ()
+        {
+            var leftMargin = (window.innerWidth - 700) / 2;
+            if (leftMargin > 0)
+            {
+                var contents = document.getElementById ('contents');
+                contents.style.marginLeft = leftMargin + 'px';
+            }
+        }
+
+        // Also re-center the contents when the page was resized...
+        window.addEventListener ('resize', CenterContents);
+
+
+        //
+        // eventWindowLoaded: used to be sure that everything has been loaded first
+        //
         window.addEventListener ('load', eventWindowLoaded, false);	
 
         //
@@ -85,6 +103,8 @@
         // 
         function eventWindowLoaded ()
         {
+            CenterContents ();
+
             MakeLegend ();
             canvasApp ();
         }
@@ -96,103 +116,107 @@
 
 <body> 
 
-    <div id='controls' style='float:left;margin-right:7px'>
+    <div id='contents'>
 
-        <div id='StartBtn' class='button enabledbutton'>Start</div>
+        <div id='controls' style='float:left;margin-right:7px'>
 
-        <div style='height:3px'> </div>
+            <div id='StartBtn' class='button enabledbutton'>Start</div>
 
-        <div id='ResetBtn' class='button enabledbutton'>Reset</div>
+            <div style='height:3px'> </div>
 
-        <div style='height:15px'> </div>
+            <div id='ResetBtn' class='button enabledbutton'>Reset</div>
 
-        <div class='dataInput'>
-            <div class='label' style='float: left'>Initial Speed: </div>                
-            <select id='initSpeedList' name='initSpeedList' style='width:70px;float:right'>
-                <option value='0'>Slowest</option>
-                <option value='1'>Slow</option>
-                <option value='2' selected>Normal</option>
-                <option value='3'>Fast</option>
-                <option value='4'>Fastest</option>
-            </select>
-        </div>
+            <div style='height:15px'> </div>
 
-        <div style='height:5px'> </div>
-
-        <div class='dataInput'>
-            <div class='label' style='float: left'>Total Population: </div>                
-            <select id='totalPopList' name='totalPopList' style='width:65px;float:right'>
-                <option value='25'>25</option>
-                <option value='50'>50</option>
-                <option value='100' selected>100</option>
-                <option value='200'>200</option>
-                <option value='400'>400</option>
-            </select>
-        </div>
-
-        <div style='height:5px'> </div>
-
-        <div class='dataInput'>
-            <div class='label' style='float: left'>Initial Infections: </div>                
-            <select id='initInfectList' name='initInfectList' style='width:65px;float:right'>
-                <option value='1' selected>1</option>
-                <option value='2'>2</option>
-                <option value='5'>5</option>
-                <option value='10'>10</option>
-            </select>
-        </div>
-
-        <div style='height:5px'> </div>
-
-        <div class='dataInput' style='height: 40px'>
-            <div>
-            <div class='label' style='float:left'>Infection Rate: </div>
-                <input id='infRateTextBox' style='width:40px;float:right;text-align: center;' value='75%' readonly/> 
+            <div class='dataInput'>
+                <div class='label' style='float: left'>Initial Speed: </div>                
+                <select id='initSpeedList' name='initSpeedList' style='width:70px;float:right'>
+                    <option value='0'>Slowest</option>
+                    <option value='1'>Slow</option>
+                    <option value='2' selected>Normal</option>
+                    <option value='3'>Fast</option>
+                    <option value='4'>Fastest</option>
+                </select>
             </div>
-            <input id='infRateSlider' style='width:170px' type='range' min='0' max='100' step='1' value='75'/>
-        </div>
 
-        <div style='height:5px'> </div>
+            <div style='height:5px'> </div>
 
-        <div class='dataInput' style='height: 40px'>
-            <div>
-            <div class='label' style='float:left'>Infection Time: </div>
-                <input id='infTimeTextBox' style='width:30px;float:right;text-align: center;' value='15' readonly/> 
+            <div class='dataInput'>
+                <div class='label' style='float: left'>Total Population: </div>                
+                <select id='totalPopList' name='totalPopList' style='width:65px;float:right'>
+                    <option value='25'>25</option>
+                    <option value='50'>50</option>
+                    <option value='100' selected>100</option>
+                    <option value='200'>200</option>
+                   <option value='400'>400</option>
+                </select>
             </div>
-            <input id='infTimeSlider' style='width:170px' type='range' min='0' max='50' step='1' value='15'/>
-        </div>
 
-        <div style='height:5px'> </div>
+            <div style='height:5px'> </div>
 
-        <div class='dataInput' style='height: 40px'>
-            <div>
-            <div class='label' style='float:left'>Death Rate: </div>
-                <input id='deathRateTextBox' style='width:40px;float:right;text-align: center;' value='3%' readonly/> 
+            <div class='dataInput'>
+                <div class='label' style='float: left'>Initial Infections: </div>                
+                <select id='initInfectList' name='initInfectList' style='width:65px;float:right'>
+                    <option value='1' selected>1</option>
+                    <option value='2'>2</option>
+                    <option value='5'>5</option>
+                    <option value='10'>10</option>
+                </select>
             </div>
-            <input id='deathRateSlider' style='width:170px' type='range' min='0' max='100' step='1' value='3'/>
+
+            <div style='height:5px'> </div>
+
+            <div class='dataInput' style='height: 40px'>
+                <div>
+                    <div class='label' style='float:left'>Infection Rate: </div>
+                    <input id='infRateTextBox' style='width:40px;float:right;text-align: center;' value='75%' readonly/> 
+                </div>
+                <input id='infRateSlider' style='width:170px' type='range' min='0' max='100' step='1' value='75'/>
+            </div>
+
+            <div style='height:5px'> </div>
+
+            <div class='dataInput' style='height: 40px'>
+                <div>
+                    <div class='label' style='float:left'>Infection Time: </div>
+                    <input id='infTimeTextBox' style='width:30px;float:right;text-align: center;' value='15' readonly/> 
+                </div>
+                <input id='infTimeSlider' style='width:170px' type='range' min='0' max='50' step='1' value='15'/>
+            </div>
+
+            <div style='height:5px'> </div>
+
+            <div class='dataInput' style='height: 40px'>
+                <div>
+                    <div class='label' style='float:left'>Death Rate: </div>
+                    <input id='deathRateTextBox' style='width:40px;float:right;text-align: center;' value='3%' readonly/> 
+                </div>
+                <input id='deathRateSlider' style='width:170px' type='range' min='0' max='100' step='1' value='3'/>
+            </div>
+
+            <div style='height:30px'> </div>
+
+            <div id='msgBox' style='display:none;'>
+                Note:
+                <hr>
+                Changing parameters will result in a reset of the simulation!
+            </div>
+
+        </div>    
+
+        <div style='float: left; position:relative; display:inline-block;'>
+
+            <canvas id='canvasSimArea' width='500' height='500'>
+                Your browser does not support the HTML 5 Canvas. 
+            </canvas>
+
+            <div style='height:1px'> </div>
+
+            <canvas id='canvasLegend' width='500' height='30'>
+                Your browser does not support the HTML 5 Canvas. 
+            </canvas>
+
         </div>
-
-        <div style='height:30px'> </div>
-
-        <div id='msgBox' style='display:none;'>
-            Note:
-            <hr>
-            Changing parameters will result in a reset of the simulation!
-        </div>
-
-    </div>    
-
-    <div style='float: left; position:relative; display:inline-block;'>
-
-        <canvas id='canvasSimArea' width='500' height='500'>
-            Your browser does not support the HTML 5 Canvas. 
-        </canvas>
-
-        <div style='height:1px'> </div>
-
-        <canvas id='canvasLegend' width='500' height='30'>
-            Your browser does not support the HTML 5 Canvas. 
-        </canvas>
 
     </div>
 
