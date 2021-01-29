@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>D3 Page Template</title>
+        <script type="text/javascript" src="d3.v5.js"></script>
+
+        <script type="text/javascript" src="SIR_R0.js"></script>
+
+        <script type='text/javascript'>
+
+            // Add a wide left margin so that the contents seem centered
+            function CenterContents ()
+            {
+                var leftMargin = (window.innerWidth - 675) / 2;
+                if (leftMargin > 0)
+                {
+                    var contents = document.getElementById ('contents');
+                    contents.style.marginLeft = leftMargin + 'px';
+                } 
+            }
+
+            // Also re-center the contents when the page was resized...
+            window.addEventListener ('resize', CenterContents);
+
+
+            //
+            // eventWindowLoaded: used to be sure that everything has been loaded first 
+            // 
+            window.addEventListener ('load', eventWindowLoaded, false);     
+            function eventWindowLoaded ()
+            {
+                CenterContents ();
+            
+                D3SVGApp ();
+            }
+
+        </script>
+
+        <style type="text/css">
+
+            .lineS
+            {
+                fill: none;
+                stroke: #0033cc;
+            }
+
+            .lineI
+            {
+                fill: none;
+                stroke: #ffab00;
+            }
+
+            .lineR
+            {
+                fill: none;
+                stroke: #009933;
+            }
+
+            .Curr
+            {
+                stroke-width: 3;
+            }
+
+            .Prev
+            {
+                stroke-width: 1;
+            }
+
+            .axisLabel
+            {
+                font-family: Helvetica, sans-serif;
+                font-size: 12px;
+            } 
+
+            .grid line
+            {
+                stroke:          lightgrey;
+                stroke-opacity:  0.6;
+                shape-rendering: crispEdges
+            }
+
+            .grid path
+            {
+                stroke-width: 0;
+            }
+
+            .container 
+            {
+                overflow:auto; 
+            }
+
+            .belowDiv 
+            {
+                float:        bottom; 
+                padding:      4px; 
+                padding-bottom: 12px; 
+                font-family:  Helvetica, sans-serif;
+                font-size:    12px;
+            }
+
+            .sideDiv
+            {
+                float:        left; 
+                margin:       5px;
+                padding:      2px;
+            }
+
+            .btnDiv
+            {
+                background-color: #006666;
+                padding:       2px;
+                border-radius: 5px;
+                width:         140px;
+            }
+
+            .btn
+            {
+                background-color: #ffffff;
+                padding:       4px;
+                border-radius: 5px;
+                margin:  10px; 
+                border-style: solid;
+                border-color:  #ffffff;
+            }
+
+            .btnSelected
+            {
+                background-color: #ff471a;
+                border-color:     #ff471a;
+            }
+
+            .btn:hover
+            {
+                border-color: black;
+            }
+
+        </style>
+
+    </head>
+
+    <body>
+
+        <div id='contents'>
+
+            <div id='controls' style='float:left;margin-right:3px'>
+
+                <div style='height:10px'></div>
+                
+                <div id='beta' class='btnDiv' >
+                    <div class='belowDiv' style='height:20px;color:#fff;text-align:center;'><span style='font-family:serif'>&beta;</span> - Transmission Rate</div>
+                    <div class='belowDiv'> 
+                        <span class='btn' id='LowBeta'>Low</span>
+                        <span class='btn btnSelected' id='HighBeta'>High</span>
+                    </div>
+                </div>
+
+                <div style='height:5px'></div>
+
+                <div id='gamma' class='btnDiv'>
+                    <div class='belowDiv' style='height:20px;color:#fff;text-align:center;'><span style='font-family:serif'>&gamma;</span> - Recovery Rate</div>
+                    <div class='belowDiv'> 
+                        <span class='btn btnSelected' id='LowGamma'>Low</span>
+                        <span class='btn' id='HighGamma'>High</span>
+                    </div>
+                </div>
+
+                <div style='height:5px'></div>
+
+                <div id='sus' class='btnDiv'>
+                    <div class='belowDiv' style='height:20px;color:#fff;text-align:center;'><span style='font-family:serif'>S<sub>0</sub></span> - Initial Susceptibles</div>
+                    <div class='belowDiv'> 
+                        <span class='btn' id='LowSus'>Few</span>
+                        <span class='btn btnSelected' id='HighSus'>Many</span>
+                    </div>
+                </div> 
+
+            </div>
+
+            <div style='float: left; position:relative; display:inline-block;'>
+                <div id='graph'> </div>
+            </div>
+
+        </div>
+
+    </body>
+
+</html>
+
+
+
+
