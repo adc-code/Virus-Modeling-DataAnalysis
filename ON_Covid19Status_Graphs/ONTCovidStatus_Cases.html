@@ -3,8 +3,39 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>D3 Page Template</title>
+        <title>Ontario Covid Case Status</title>
         <script type="text/javascript" src="d3.v5.js"></script>
+
+        <script type="text/javascript" src="ONTCovidStatus_Cases.js"></script>
+
+        <script type='text/javascript'>
+
+            // Add a wide left margin so that the contents seem centered
+            function CenterContents ()
+            {
+                var leftMargin = (window.innerWidth - 745) / 2;
+                if (leftMargin > 0)
+                {
+                    var contents = document.getElementById ('contents');
+                    contents.style.marginLeft = leftMargin + 'px';
+                }
+            }
+
+            // Also re-center the contents when the page was resized...
+            window.addEventListener ('resize', CenterContents);
+
+            //
+            // eventWindowLoaded: used to be sure that everything has been loaded first 
+            // 
+            window.addEventListener ('load', eventWindowLoaded, false);     
+            function eventWindowLoaded ()
+            {
+                CenterContents ();
+                D3SVGApp ();
+            }
+
+        </script>
+
 
         <style>
 
@@ -31,6 +62,12 @@
             }
 
             .queryLine
+            {
+                color:            #333333;
+                stroke-dasharray: 2, 3; 
+            }
+
+            .queryLineY
             {
                 color:            #333333;
                 stroke-dasharray: 2, 3; 
@@ -87,7 +124,7 @@
 
                 float:            bottom;
                 vertical-align:   middle;
-
+                
                 margin-left: auto; margin-right: auto;  
 
                 border-radius:    7px;
@@ -96,10 +133,10 @@
                 border-width:     4px;
                 height:           25px; 
                 width:            165px; 
-                padding:          7px 4px; 
+                padding:          4px 4px; 
                 font-family:      Helvetica, sans-serif;
                 font-size:        12px;
-                color:            #000000;
+                color:            #000;
                 cursor:           pointer;
 
                 /* Prevent text selection */
@@ -117,6 +154,23 @@
                 left:             50%;
                 margin-right:    -50%;         
                 transform:        translate(-50%, -50%); 
+            }
+
+            .range
+            {
+                border-radius:    7px;
+                border-style:     solid;
+                border-color:     white;
+                border-width:     4px;
+                height:           25px; 
+                width:            165px; 
+                padding:          4px 4px; 
+                padding-top:      10px;
+                font-family:      Helvetica, sans-serif;
+                font-size:        12px;
+                color:            #fff;
+                background-color: #121212;
+                cursor:           pointer;
             }
             
             .buttons:hover
@@ -172,839 +226,40 @@
 
     <body>
 
-        <div>
+        <div id='contents'>
+
             <div id='controls' class='sidebyside'>
                 <div datagroup='1' class='buttons datasetBtn datasetBtnSel'><p>Overall Cases       </p></div>
                 <div datagroup='2' class='buttons datasetBtn'              ><p>Hospitalized Cases  </p></div>
                 <div datagroup='3' class='buttons datasetBtn'              ><p>Long Term Care Cases</p></div>
-                <div style='height:20px'> </div>
+
+                <div style='height:10px'> </div>
+
+                <div class='range'>
+                    <div style='float:left;margin-left:5px'>Time Range: </div>
+                    <select id='timeRangeList' name='timeRangeList' style='width:80px;float:right'>
+                         <option value='1' selected> All </option>
+                         <option value='2'> Only 2020 </option>
+                         <option value='3'> Only 2021 </option>
+                         <option value='4'> Jan 2020 - Mar 2020 </option>
+                         <option value='5'> Apr 2020 - Jun 2020 </option>
+                         <option value='6'> Jul 2020 - Sep 2020 </option>
+                         <option value='7'> Oct 2020 - Dec 2020 </option>
+                         <option value='8'> Jan 2021 - Mar 2021 </option>
+                     </select>
+                </div>     
+
+                <div style='height:10px'> </div>
             </div>
+
             <div class='sidebyside'>
                 <div id='graph' style='width: 550px'> </div>
                 <div id='values' style='width: 550px; float: bottom;'> </div>
             </div>
+
         </div>
+
         <div id='hiddenControls' style='opacity: 1;' class='sidebyside'> </div>
-         
-
-        <script type="text/javascript">
-
-            // The data...
-            var dataFile = 'ONTCovidTesting.csv';
-
-            // UI state
-            var maxValues   = [];
-            var rangeValues = [];
-            var colGroupID  = [ -2,    // Reported Date
-
-                                -1,    // Confirmed Negative    
-                                -1,    // Presumptive Negative  
-                                -1,    // Presumptive Positive
-
-                                 1,    // Confirmed Positive
-                                 1,    // Resolved
-                                 1,    // Deaths
-                                 1,    // Total Cases
-                                 1,    // Total patients approved for testing as of Reporting Date
-                                 1,    // Total tests completed in the last day
-                                -1,    // Percent positive tests in last day 
-                                 1,    // Under Investigation
-
-                                 2,    // Number of patients hospitalized with COVID-19
-                                 2,    // Number of patients in ICU with COVID-19
-                                 2,    // Number of patients in ICU on a ventilator with COVID-19
- 
-                                 3,    // Total Positive LTC Resident Cases
-                                 3,    // Total Positive LTC HCW Cases
-                                 3,    // Total LTC Resident Deaths
-                                 3 ];  // Total LTC HCW Deaths
-
-
-            var currGroup   = 1;
-            var colours     = d3.schemeCategory10;
-
-            var d3Lines = [];
-
-
-            // SVG Width, height, and some added spacing
-            var w         = 550;
-            var h         = 300;
-            var padding   =  55;
-
-            // Empty, for now
-            var dataset, xScale, yScale;
-
-
-            var updateDuration = 500;  
-            var stepCurveTol   = 350;
-
-
-            //
-            // Function used to parse the CSV.  
-            // 
-            var rowConverter = function (d) 
-            {
-                //console.log (d);
-
-                // This isn't the best piece of code... perhaps there is a better way to deal with NAs
-                if (d['Confirmed Positive'] == '')
-                    d['Confirmed Positive'] = 0;
-
-                if (d['Resolved'] == '')
-                    d['Resolved'] = 0;
-                 
-                if (d['Deaths'] == '')
-                    d['Deaths'] = 0;
-               
-                if (d['Total Cases'] == '')
-                    d['Total Cases'] = 0;
-
-                if (d['Total patients approved for testing as of Reporting Date'] == '')
-                    d['Total patients approved for testing as of Reporting Date'] = 0;
-
-                if (d['Total tests completed in the last day'] == '')
-                    d['Total tests completed in the last day'] = 0;
-
-                if (d['Under Investigation'] == '')
-                    d['Under Investigation'] = 0; 
-
-                if (d['Number of patients hospitalized with COVID-19'] == '')
-                    d['Number of patients hospitalized with COVID-19'] = 0;
-                   
-                if (d['Number of patients in ICU with COVID-19'] == '')
-                    d['Number of patients in ICU with COVID-19'] = 0;
-
-                if (d['Number of patients in ICU on a ventilator with COVID-19'] == '')
-                    d['Number of patients in ICU on a ventilator with COVID-19'] = 0;
-
-                if (d['Total Positive LTC Resident Cases'] == '')
-                    d['Total Positive LTC Resident Cases'] = 0;
-
-                if (d['Total Positive LTC HCW Cases'] == '')
-                    d['Total Positive LTC HCW Cases'] = 0;
-
-                if (d['Total LTC Resident Deaths'] == '')
-                    d['Total LTC Resident Deaths'] = 0;
-
-                if (d['Total LTC HCW Deaths'] == '')
-                    d['Total LTC HCW Deaths'] = 0;
-
-                if (d['Percent positive tests in last day'] == '')
-                    d['Percent positive tests in last day'] = 0;
-
-                return {
-                    // Note that we need to convert to the correct timezone
-                    date:            new Date (new Date (d['Reported Date']).getTime() + 1000*60*60*5),
-                    confirmedPos:    parseInt (d['Confirmed Positive']),
-                    resolved:        parseInt (d['Resolved']),
-                    deaths:          parseInt (d['Deaths']),
-                    totalCases:      parseInt (d['Total Cases']),
-                    totalApproved:   parseInt (d['Total patients approved for testing as of Reporting Date']),
-                    totalCompleted:  parseInt (d['Total tests completed in the last day']),
-                    underInvest:     parseInt (d['Under Investigation']),
-                    numHosp:         parseInt (d['Number of patients hospitalized with COVID-19']),
-                    numHospICU:      parseInt (d['Number of patients in ICU with COVID-19']),
-                    numHospICUVent:  parseInt (d['Number of patients in ICU on a ventilator with COVID-19']),
-                    numLTCResCases:  parseInt (d['Total Positive LTC Resident Cases']),
-                    numLTCHCWCases:  parseInt (d['Total Positive LTC HCW Cases']),
-                    numLTCResDeaths: parseInt (d['Total LTC Resident Deaths']),
-                    numLTCHCWDeaths: parseInt (d['Total LTC HCW Deaths'])
-                };
-
-            };
-
-            //
-            // Read the CSV...
-            //
-            d3.csv (dataFile, rowConverter).then (function (data) 
-            {
-                // Print data to console as table, for verification
-                // console.table (data);
-
-                // Executed once the CSV has been read in...
-                dataset = data;
-
-                //
-                // Get the Max values for each data element
-                //
-                maxValues_Cases = [];
-                maxValues_Hosp  = [];
-                maxValues_LTC   = [];
-
-                maxValues_Cases.push ( d3.max(dataset, function(d) { return d.confirmedPos;   }) );
-                maxValues_Cases.push ( d3.max(dataset, function(d) { return d.resolved;       }) );
-                maxValues_Cases.push ( d3.max(dataset, function(d) { return d.deaths;         }) );
-                maxValues_Cases.push ( d3.max(dataset, function(d) { return d.totalCases;     }) );
-                maxValues_Cases.push ( d3.max(dataset, function(d) { return d.totalApproved;  }) );
-                maxValues_Cases.push ( d3.max(dataset, function(d) { return d.totalCompleted; }) );
-                maxValues_Cases.push ( d3.max(dataset, function(d) { return d.underInvest;    }) );
-
-                maxValues_Hosp.push ( d3.max(dataset, function(d) { return d.numHosp;         }) );
-                maxValues_Hosp.push ( d3.max(dataset, function(d) { return d.numHospICU;      }) );
-                maxValues_Hosp.push ( d3.max(dataset, function(d) { return d.numHospICUVent;  }) );
-
-                maxValues_LTC.push ( d3.max(dataset, function(d) { return d.numLTCResCases;   }) );
-                maxValues_LTC.push ( d3.max(dataset, function(d) { return d.numLTCHCWCases;   }) );
-                maxValues_LTC.push ( d3.max(dataset, function(d) { return d.numLTCResDeaths;  }) );
-                maxValues_LTC.push ( d3.max(dataset, function(d) { return d.numLTCHCWDeaths;  }) );
-
-                maxValues = [ maxValues_Cases, maxValues_Hosp, maxValues_LTC ];
-
-                // Note that the 0, 46, and 93 might seem a bit strange but they are just offsets from where
-                // the data has meaning.  The first set of data starts from the beginning (hence 0 offset),
-                // the second with hospitalization started being reported 46 days later, and the final set
-                // related to long term care centres was reported from 93 days later.
-                rangeValues = [ [ dataset[ 0].date, dataset[dataset.length - 1].date ], 
-                                [ dataset[46].date, dataset[dataset.length - 1].date ], 
-                                [ dataset[93].date, dataset[dataset.length - 1].date ]  ];
-
-                // 
-                // Make UI buttons from the columns...
-                // 
-                var groupCount = [0, 0, 0, 0];
-
-                var disabledInitialState = [ 'Total patients approved for testing as of Reporting Date' ];
-
-                var colNames = dataset ['columns'];
-                for (var i = 0; i < colNames.length; i++)
-                {
-                    console.log (colNames[i]);
-
-                    // skip cols we don't want to deal with
-                    if (colGroupID [i] < 0)
-                        continue;
-
-                    // Make a new div and add the column name to it
-                    var newDiv     = document.createElement ('div'); 
-                    var newPara    = document.createElement ('p'); 
-                    var newContent = document.createTextNode (colNames[i]); 
-                    
-                    // Specify class names, attributes, styles...
-                    newDiv.className = 'buttons lineBtn';
-                    newDiv.classList.add ('linegrp_' + colGroupID [i]);
-                    newDiv.setAttribute ('linenum', groupCount [ colGroupID[i] ] );
-
-                    if (disabledInitialState.indexOf (colNames[i]) >= 0)
-                    {
-                        newDiv.setAttribute ('state', 0 );
-                        newDiv.style.backgroundColor = "#cccccc";
-                    }
-                    else
-                    {
-                        newDiv.setAttribute ('state', 1 );
-                        newDiv.style.backgroundColor = colours [ groupCount[colGroupID[i]] ];
-                    }
-
-                    newDiv.setAttribute ('grp',  colGroupID [i]);
-
-                    newPara.appendChild (newContent);
-                    newDiv.appendChild (newPara);
-
-                    // Increment the group counter...
-                    groupCount [ colGroupID[i] ] = groupCount [ colGroupID[i] ] + 1;               
-
-                    // If it is the current group, the show it, otherwise hide the elements...
-                    if ( colGroupID[i] == currGroup)
-                    {
-                        newDiv.classList.add ('visible')
-                        var currentDiv = document.getElementById ('controls').appendChild (newDiv);
-                    }
-                    else
-                    {
-                        newDiv.classList.add ('hidden')
-                        var currentDiv = document.getElementById ('hiddenControls').appendChild (newDiv);
-                    }
-
-                } // for i in colNames...
-
-                //
-                // Make the table below
-                //
-                for (var i = 0; i < colNames.length; i++)
-                {
-                    // console.log (colNames[i]);
-
-                    if (colGroupID[i] == -1)
-                        continue;
-
-                    var newContDiv = document.createElement ('div'); 
-                    newContDiv.className = 'queryData';
-                    newContDiv.classList.add ('qd_grp_' + colGroupID [i]);
-
-                    var labelDiv     = document.createElement ('div'); 
-                    var labelContent = document.createTextNode (colNames[i] + ': '); 
-                    labelDiv.appendChild (labelContent);
-                    labelDiv.className = 'queryLabel';
-
-                    var outputDiv     = document.createElement ('div'); 
-                    var outputContent = document.createTextNode ('0');
-                    outputDiv.appendChild (outputContent);
-
-                    outputDiv.className = 'queryOutput';
-                    if (i == 0)
-                        outputDiv.id = 'OutDate';
-                    else
-                        outputDiv.id = 'Out_' + colGroupID[i] + '_' + (i-1);
-
-                    outputDiv.setAttribute ('num', i-1);
-
-                    //newLabel.setAttribute ('num', i-1);
-                    newContDiv.appendChild (labelDiv);
-                    newContDiv.appendChild (outputDiv);
-
-                    //var currentDiv = document.getElementById ('values').appendChild (newContDiv); 
-                    // If it is the current group, the show it, otherwise hide the elements...
-                    if ( colGroupID[i] == currGroup || colGroupID[i] == -2 )
-                    {
-                        newContDiv.classList.add ('visible')
-                        var currentDiv = document.getElementById ('values').appendChild (newContDiv);
-                    }
-                    else
-                    {
-                        newContDiv.classList.add ('hidden')
-                        var currentDiv = document.getElementById ('hiddenControls').appendChild (newContDiv);
-                    }
-                }
-
-                // Note that some things might have been disabled by default.  Remove them from the max values list
-                var tmpMax = [ 0 ];
-                d3.selectAll ('.linegrp_' + (currGroup))
-                  .each ( function (d, i)
-                  {
-                      if (d3.select(this).node().getAttribute ('state') == 1)
-                          tmpMax.push (maxValues[currGroup-1][i]);
-                  } );
-
-                // Define the scales to convert our data to screen coordinates
-                xScale = d3.scaleTime ()
-                           .domain ( rangeValues [currGroup-1] )
-                           .range ( [padding, w - 13] );                
-
-                yScale = d3.scaleLinear ()
-                           //.domain ( [0, d3.max ( maxValues[currGroup-1] ) ] )
-                           .domain ( [0, d3.max ( tmpMax ) ] )
-                           .range ( [h - padding, padding/2] );
-
-                // Define X axis
-                xAxis = d3.axisBottom ()
-                          .scale (xScale)
-                          .ticks (7)
-                          .tickFormat ( d3.timeFormat ('%b %d') );
-
-                // Define Y axis
-                yAxis = d3.axisLeft ()
-                          .scale (yScale)
-                          .ticks (10);
-
-                // Create SVG element
-                var svg = d3.select ('#graph')
-                            .append ('svg')
-                            .attr ('width', w - 10)   // XXX
-                            .attr ('height', h - padding/2 + 20);
-
-                // Create axes..
-                svg.append ('g')
-                   .attr ('class', 'x axis')
-                   .attr ('transform', 'translate(0,' + (h - padding) + ')')
-                   .call (xAxis)
-                   .selectAll ('text')  
-                   .style ('text-anchor', 'end')
-                   .attr ('dx', '-1em')
-                   .attr ('dy', '-0.55em')
-                   .attr ('transform', 'rotate(-90)');
-
-                svg.append ('g')
-                   .attr ('class', 'y axis')
-                   .attr ('transform', 'translate(' + padding + ',0)')
-                   .call (yAxis); 
-
-                var d3Lines_Cases = [];
-                var d3Lines_Hosp  = [];
-                var d3Lines_LTC   = [];
-
-                var disabledDefaultState_Cases = []; 
-                var disabledDefaultState_Hosp  = [];
-                var disabledDefaultState_LTC   = [];
-
-                d3Lines_Cases.push (d3.line ()
-                                .x (function(d) { return xScale (d.date);           })
-                                .y (function(d) { return yScale (d.confirmedPos);   }) );
-                disabledDefaultState_Cases.push (0);
-
-                d3Lines_Cases.push (d3.line ()
-                                .x (function(d) { return xScale (d.date);           })
-                                .y (function(d) { return yScale (d.resolved);       }) );
-                disabledDefaultState_Cases.push (0);
-
-                d3Lines_Cases.push (d3.line ()
-                                .x (function(d) { return xScale (d.date);           })
-                                .y (function(d) { return yScale (d.deaths);         }) );
-                disabledDefaultState_Cases.push (0);
-
-                d3Lines_Cases.push (d3.line ()
-                                .x (function(d) { return xScale (d.date);           })
-                                .y (function(d) { return yScale (d.totalCases);     }) );
-                disabledDefaultState_Cases.push (0);
-
-                d3Lines_Cases.push (d3.line ()
-                                .x (function(d) { return xScale (d.date);           })
-                                .y (function(d) { return yScale (d.totalApproved);  }) );
-                disabledDefaultState_Cases.push (1);
-
-                d3Lines_Cases.push (d3.line ()
-                                .x (function(d) { return xScale (d.date);           })
-                                .y (function(d) { return yScale (d.totalCompleted); }) );
-                disabledDefaultState_Cases.push (0);
-
-                d3Lines_Cases.push (d3.line ()
-                                .x (function(d) { return xScale (d.date);           })
-                                .y (function(d) { return yScale (d.underInvest);    }) );
-                disabledDefaultState_Cases.push (0);
-
-
-                d3Lines_Hosp.push (d3.line ()
-                                .x (function(d) { if (d.date < rangeValues[1][0])
-                                                      return xScale (rangeValues[1][0]);
-                                                  else 
-                                                      return xScale (d.date);       })
-                                .y (function(d) { if (d.date < rangeValues[1][0]) 
-                                                      return yScale (0);
-                                                  else
-                                                      return yScale (d.numHosp);    }) );
-                disabledDefaultState_Hosp.push (0);
-
-                d3Lines_Hosp.push (d3.line ()
-                                .x (function(d) { if (d.date < rangeValues[1][0])
-                                                      return xScale (rangeValues[1][0]); 
-                                                  else
-                                                      return xScale (d.date);       })
-                                .y (function(d) { if (d.date < rangeValues[1][0])
-                                                      return yScale (0);
-                                                  else
-                                                      return yScale (d.numHospICU); }) );
-                disabledDefaultState_Hosp.push (0);
-
-                d3Lines_Hosp.push (d3.line ()
-                                .x (function(d) { if (d.date < rangeValues[1][0])
-                                                      return xScale (rangeValues[1][0]);
-                                                  else
-                                                      return xScale (d.date);       })
-                                .y (function(d) { if (d.date < rangeValues[1][0])
-                                                      return yScale (0);
-                                                  else
-                                                      return yScale (d.numHospICUVent); }) );
-                disabledDefaultState_Hosp.push (0);
-
-
-                d3Lines_LTC.push (d3.line ()
-                                .x (function(d) { if (d.date < rangeValues[2][0])
-                                                      return xScale (rangeValues[2][0]);
-                                                  else 
-                                                      return xScale (d.date);       })
-                                .y (function(d) { if (d.date < rangeValues[2][0])
-                                                      return yScale (0);
-                                                  else
-                                                      return yScale (d.numLTCResCases); }) );
-                disabledDefaultState_LTC.push (0);
-
-                d3Lines_LTC.push (d3.line ()
-                                .x (function(d) { if (d.date < rangeValues[2][0])
-                                                      return xScale (rangeValues[2][0]); 
-                                                  else
-                                                      return xScale (d.date);       })
-                                .y (function(d) { if (d.date < rangeValues[2][0])
-                                                      return yScale (0);
-                                                  else
-                                                      return yScale (d.numLTCHCWCases); }) );
-                disabledDefaultState_LTC.push (0);
-
-                d3Lines_LTC.push (d3.line ()
-                                .x (function(d) { if (d.date < rangeValues[2][0])
-                                                      return xScale (rangeValues[2][0]); 
-                                                  else
-                                                      return xScale (d.date);           })
-                                .y (function(d) { if (d.date < rangeValues[2][0])
-                                                      return yScale (0);
-                                                  else
-                                                      return yScale (d.numLTCResDeaths);}) );
-                disabledDefaultState_LTC.push (0);
-
-                d3Lines_LTC.push (d3.line ()
-                                .x (function(d) { if (d.date < rangeValues[2][0])   
-                                                      return xScale (rangeValues[2][0]);
-                                                  else
-                                                      return xScale (d.date);           })
-                                .y (function(d) { if (d.date < rangeValues[2][0])
-                                                      return yScale (0);
-                                                  else
-                                                      return yScale (d.numLTCHCWDeaths);}).curve (d3.curveStepAfter) );
-                disabledDefaultState_LTC.push (0);
-
-                d3Lines = [ d3Lines_Cases, d3Lines_Hosp, d3Lines_LTC ];
-                disabledDefaultState = [ disabledDefaultState_Cases, disabledDefaultState_Hosp, disabledDefaultState_LTC ];
-
-                var queryLine = d3.line ()
-                                  .x (function(d) { return xScale (d.t); })
-                                  .y (function(d) { return d.y;          });
-
-
-                // Make many paths...
-                for (var i = 0; i < d3Lines.length; i++)
-                {
-                    for (var j = 0; j < d3Lines[i].length; j++)
-                    {
-                        // console.log ('Adding path for line #' + j + ' of group #' + i); 
-
-                        var opacity = 0;
-                        if ( (i+1) == currGroup )
-                            opacity = 1;
-
-                        if ( disabledDefaultState[i][j] == 1 )
-                            opacity = 0;
-
-                        var newPath = svg.append ('path')
-                                         .datum (dataset)
-                                         .attr ('class', 'line grp_' + (i+1) )
-                                         .attr ('id', 'line_' + i + '_' + j )
-                                         .attr ('stroke', colours [j] )
-                                         .style ('opacity', opacity )
-                                         .attr ('d', d3Lines[i][j] );
-
-                        var totalLength = newPath.node().getTotalLength();
-                        //console.log (totalLength);
-
-                        if ( totalLength > stepCurveTol )
-                            d3Lines[i][j].curve (d3.curveMonotoneX);
-                        else
-                            d3Lines[i][j].curve (d3.curveStepAfter);
-                    }
-                }
-
-                // Add the query line...
-                svg.append ('path')
-                   .datum ( [ { t: dataset[0].date, y: h-padding }, { t: dataset[0].date, y: padding/2} ] )
-                   .attr ('class', 'queryLine')
-                   .attr ('stroke', '#333333')
-                   .attr ('d', queryLine);
-
-                // Make an empty rectangle to handle mouse move events...
-                svg.append ('rect') 
-                   .attr ('width', w)     
-                   .attr ('height', h)   
-                   .style ('fill', 'none')                 
-                   .style ('pointer-events', 'all')       
-                   .on ('mousemove', mousemove);
-
-                // Add the title...
-                svg.append ('text')
-                   .attr ('x', w/2)
-                   .attr ('y', padding/4)
-                   .text ( dataset[0].date.toDateString() + ' to ' + dataset[dataset.length - 1].date.toDateString() )
-                   .attr ('class', 'title');
-
-
-                // 
-                // dataset buttons callback
-                //
-                d3.selectAll ('.datasetBtn').on ('click', function()
-                {
-                    // console.log ('datasetBtn CB'); 
-
-                    var selGroup = +d3.select(this).node().getAttribute ('datagroup');
-                    if (selGroup != currGroup)
-                    {
-                        // Change the colour by changing the class
-                        d3.selectAll ('.datasetBtn').classed ('datasetBtnSel', false);
-                        d3.select(this).node().classList.add ('datasetBtnSel');
-
-                        // Hide/Show the line buttons
-                        var current = d3.selectAll ('.linegrp_' + currGroup)
-                        current.classed ('hidden',  true);
-                        current.classed ('visible', false);
-
-                        var target = d3.select ('#hiddenControls');
-                        current.each (function() { target.append(() => this); });
-
-                        var selected = d3.selectAll ('.linegrp_' + selGroup);
-                        var target = d3.select ('#controls');
-                        selected.each (function() { target.append(() => this); });
-
-                        selected.classed ('visible', true); 
-                        selected.classed ('hidden', false);
-
-                        // Hide/show the query data
-                        var current = d3.selectAll ('.qd_grp_' + currGroup)
-                        current.classed ('hidden',  true);
-                        current.classed ('visible', false);
-
-                        var target = d3.select ('#hiddenControls');
-                        current.each (function() { target.append(() => this); });
-
-                        var selected = d3.selectAll ('.qd_grp_' + selGroup);
-                        var target = d3.select ('#values');
-                        selected.each (function() { target.append(() => this); });
-
-                        selected.classed ('visible', true);
-                        selected.classed ('hidden', false);
-
-
-                        // Update line opacity and line data so it uses the new scale
-                        d3.selectAll ('.grp_' + currGroup)
-                          .transition ()
-                          .duration (updateDuration)
-                          .style ('opacity', 0);
-
-                        d3.selectAll ('.grp_' + selGroup)
-                          .transition ()
-                          .duration (updateDuration)
-                          .style ('opacity', 1);
-
-                        var tmpMax = [ 0 ];
-                        var vizState = [];
-                        d3.selectAll ('.linegrp_' + selGroup)
-                          .each ( function (d, i) 
-                          {
-                              var state = +d3.select(this).node().getAttribute ('state');
-                              vizState.push (state);
-
-                              if (state == 1)
-                                  tmpMax.push (maxValues [selGroup-1][i]);
-                          } ); 
-                        
-                        // update the scales
-                        xScale.domain ( rangeValues [selGroup-1] );
-                        yScale.domain ( [0, d3.max (tmpMax) ] );
-
-                        // Update x and y axes
-                        svg.select ('.x.axis')
-                           .transition ()
-                           .duration (updateDuration)
-                           .call (xAxis)
-                           .selectAll ('text')  
-                           .style ('text-anchor', 'end')
-                           .attr ('dx', '-1em')
-                           .attr ('dy', '-0.55em')
-                           .attr ('transform', 'rotate(-90)');
-
-                        svg.select ('.y.axis')
-                           .transition ()
-                           .duration (updateDuration)
-                           .call (yAxis);
-
-                        var vizState = [];
-                        d3.selectAll ('.linegrp_' + selGroup)
-                          .each ( function (d, i) 
-                          {
-                              vizState.push (+d3.select(this).node().getAttribute ('state'));
-                          } ); 
-                        
-                        for (var i = 0; i < d3Lines[selGroup-1].length; i++)
-                        { 
-                            if (vizState[i] == 1)
-                                d3.select ('#line_' + (selGroup-1)  + '_' + i)
-                                  .transition ()
-                                  .duration (updateDuration)
-                                  .delay (updateDuration)
-                                  .attr ('d', d3Lines[selGroup - 1][i](dataset) );
-                            else
-                                d3.select ('#line_' + (selGroup-1)  + '_' + i)
-                                  .transition ()
-                                  .duration (updateDuration)
-                                  .style ('opacity', 0);
-                        }
-
-                        // Update the current group
-                        currGroup = selGroup;
-                    }
-
-                } ); // datasetBtn CB function
-
-
-                //
-                // Hide/Show line graphs...
-                //
-                d3.selectAll ('div.lineBtn').on ('click', function() 
-                {
-                    var num   = +d3.select(this).node().getAttribute ('linenum');
-                    var grp   = +d3.select(this).node().getAttribute ('grp') - 1;
-                    var state = +d3.select(this).node().getAttribute ('state'); 
-
-                    //console.log (num + '   ' + grp + '   ' + state);
-
-                    // Change the UI
-                    if (state == 1)
-                    {
-                        d3.select(this).node().style.backgroundColor = "#cccccc"; 
-                        d3.select(this).node().setAttribute ('state', 0);
-                    }
-                    else
-                    {
-                        d3.select(this).node().style.backgroundColor = colours[num];
-                        d3.select(this).node().setAttribute ('state', 1);
-                    }
-
-                    // Show/hide the line
-                    d3.select ('#line_' + grp + '_' + num)
-                      .transition ()
-                      .duration (updateDuration)
-                      .style ('opacity', state ? 0.0 : 1.0);
-
-                    var tmpMax = [ 0 ];
-                    d3.selectAll ('.linegrp_' + (grp+1))
-                      .each ( function (d, i) 
-                      {
-                          if (d3.select(this).node().getAttribute ('state') == 1)
-                              tmpMax.push (maxValues[grp][i]);
-                      } );
-
-                    // adjust the scale
-                    yScale.domain ( [0,  d3.max (tmpMax) ] );
-
-                    // Update y-axis
-                    svg.select ('.y.axis')
-                       .transition ()
-                       .duration (updateDuration)
-                       .call (yAxis);
-
-                    for (var i = 0; i < d3Lines[currGroup-1].length; i++)
-                    { 
-                        // console.log ('Updating... line_' + (selGroup-1) + '_' + i);
-                        d3.select ('#line_' + (currGroup-1)  + '_' + i)
-                          .transition ()
-                          .duration (updateDuration)
-                          .delay (updateDuration)
-                          .attr ('d', d3Lines[currGroup - 1][i](dataset) );
-                    }
-
-                });  // lineBtn CB function
-
-
-                //
-                // mousemove callback function used for the query line
-                //
-                function mousemove () 
-                {  
-                    var selectedDate = xScale.invert (d3.mouse(this)[0]);
-          
-                    if (selectedDate > rangeValues[currGroup-1][1])
-                        selectedDate = rangeValues[currGroup-1][1];
-
-                    if (selectedDate >= rangeValues[currGroup-1][0])
-                    {
-                        var locData = [ {t: selectedDate, y: h-padding }, {t: selectedDate, y: padding/2 } ];
-
-                        svg.select ('.queryLine').attr ('d', queryLine(locData));
-
-                        // So when going from pixels to a date, the xScale function nicely interpolates
-                        // the date values for you.  However the governments data has some missing days 
-                        // that we need to take into account.
-                        var dateValSelected = 100 * selectedDate.getMonth() + selectedDate.getDate();
-
-                        var index = 0;
-                        for (var i = 0; i < dataset.length; i++)
-                        {
-                            var dateValInDataset = 100 * dataset[i].date.getMonth() + dataset[i].date.getDate();
-                            if (dateValInDataset >= dateValSelected)
-                            {
-                                index = i;
-                                break;
-                            }
-                        }
-
-                        d3.selectAll ('#OutDate').html (dataset[index].date.toDateString());
-
-                        var vizState = [];
-                        d3.selectAll ('.linegrp_' + (currGroup))
-                          .each ( function (d, i)
-                          {   
-                              vizState.push (+d3.select(this).node().getAttribute ('state'));
-                          } );
-
-                        if (currGroup == 1)
-                        {
-                            if (vizState[0])
-                                d3.selectAll ('#Out_' + currGroup + '_3').html (dataset[index].confirmedPos);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_3').html ('-');
-
-                            if (vizState[1])
-                                d3.selectAll ('#Out_' + currGroup + '_4').html (dataset[index].resolved);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_4').html ('-');
-
-                            if (vizState[2])
-                                d3.selectAll ('#Out_' + currGroup + '_5').html (dataset[index].deaths);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_5').html ('-');
-
-                            if (vizState[3])
-                                d3.selectAll ('#Out_' + currGroup + '_6').html (dataset[index].totalCases);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_6').html ('-');
-
-                            if (vizState[4])
-                                d3.selectAll ('#Out_' + currGroup + '_7').html (dataset[index].totalApproved);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_7').html ('-');
- 
-                            if (vizState[5])
-                                d3.selectAll ('#Out_' + currGroup + '_8').html (dataset[index].totalCompleted);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_8').html ('-');
-
-                            if (vizState[6])
-                                d3.selectAll ('#Out_' + currGroup + '_10').html (dataset[index].underInvest);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_10').html ('-');
-                        }
-                        else if (currGroup == 2)
-                        {
-                            if (vizState[0])
-                                d3.selectAll ('#Out_' + currGroup + '_11').html (dataset[index].numHosp);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_11').html ('-');
-
-                            if (vizState[1])
-                                d3.selectAll ('#Out_' + currGroup + '_12').html (dataset[index].numHospICU);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_12').html ('-');
-
-                            if (vizState[2])
-                                d3.selectAll ('#Out_' + currGroup + '_13').html (dataset[index].numHospICUVent);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_13').html ('-');
-                        }
-                        else if (currGroup == 3)
-                        {
-                            if (vizState[0])
-                                d3.selectAll ('#Out_' + currGroup + '_14').html (dataset[index].numLTCResCases);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_14').html ('-');
-
-                            if (vizState[1])
-                                d3.selectAll ('#Out_' + currGroup + '_15').html (dataset[index].numLTCHCWCases);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_15').html ('-');
-
-                            if (vizState[2])
-                                d3.selectAll ('#Out_' + currGroup + '_16').html (dataset[index].numLTCResDeaths);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_17').html ('-');
-
-                            if (vizState[3])
-                                d3.selectAll ('#Out_' + currGroup + '_17').html (dataset[index].numLTCHCWDeaths);
-                            else
-                                d3.selectAll ('#Out_' + currGroup + '_17').html ('-');
-                        }
-
-                    } // if within limits
-
-                } // function mousemove
- 
-
-            }); // CSV read
-
-        </script>
 
     </body>
 
