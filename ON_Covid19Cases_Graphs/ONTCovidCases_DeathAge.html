@@ -1,10 +1,36 @@
 <!DOCTYPE html>
 
 <html lang="en">
+
     <head>
+
         <meta charset="utf-8">
-        <title>D3 Page Template</title>
+        <title>Covid Case Average Death Age</title>
+
         <script type="text/javascript" src="d3.v5.js"></script>
+        <script type="text/javascript" src="ONTCovidCases_DeathAge.js"></script>
+
+        <script type="text/javascript">
+
+            // Add a wide left margin so that the table seems centered
+            var CenterTable = function ()
+            {
+                var leftMargin = (window.innerWidth - 150) / 2;
+                d3.select ('#DeathRates').style ('margin-left', leftMargin + 'px');
+            }
+
+            // Also re-center the table when the page was resized...
+            d3.select(window).on ('resize', function () { CenterTable (); } );
+
+            // eventWindowLoaded: used to be sure that everything has been loaded first 
+            window.addEventListener ('load', eventWindowLoaded, false);     
+            function eventWindowLoaded ()
+            {
+                CenterTable ();
+                D3App ();
+            }  
+
+        </script>
 
         <style>
             .block
@@ -30,62 +56,6 @@
         <div id='DeathRates'>
             <div id='block_1' class='block'>b </div>
         </div>
-
-        <script type="text/javascript">
-
-            // Add a wide left margin so that the table seems centered
-            var CenterTable = function ()
-            {
-                var leftMargin = (window.innerWidth - 150) / 2;
-                d3.select ('#DeathRates').style ('margin-left', leftMargin + 'px');
-            }
-
-            // on creation of this page, center the results.
-            CenterTable ();
-
-            // Also re-center the table when the page was resized...
-            d3.select(window).on ('resize', function () { CenterTable (); } );
-
-
-            var dataFile = 'ONCovidCases_DeathRates.csv';
-
-            //
-            // Function used to parse the CSV.  
-            // 
-            var rowConverter = function (d) 
-            {
-                return [  d['outcome'], 
-                          parseFloat (d['rate']) 
-                       ];
-            };
-
-            //
-            // Read the CSV...
-            //
-            d3.csv (dataFile, rowConverter).then (function (data) 
-            {
-                var dataset = data;
-
-                var FatalIndex = 0;
-                for (var i = 0; i < dataset.length; i++)
-                {
-                    if (dataset[i][0] == 'Fatal')
-                    {
-                        FatalIndex = i;
-                        break;
-                    }
-                }
-
-                var output = '<strong> Average Fatality Age </strong>';
-                output += '<hr>';
-                output += (dataset[FatalIndex][1]).toFixed(1);
-
-                d3.select ('#block_1').node().innerHTML = output;
-
-                console.log (data);
-            } ); 
-
-        </script>
 
     </body>
 
