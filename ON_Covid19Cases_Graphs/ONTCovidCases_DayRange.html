@@ -1,12 +1,40 @@
 <!DOCTYPE html>
 
 <html lang="en">
+
     <head>
+
         <meta charset="utf-8">
-        <title>D3 Page Template</title>
+        <title>Covid Day Range</title>
+
         <script type="text/javascript" src="d3.v5.js"></script>
+        <script type="text/javascript" src="ONTCovidCases_DayRange.js"></script>
+
+        <script type="text/javascript">
+
+            // Add a wide left margin so that the table seems centered
+            var CenterTable = function ()
+            {
+                var leftMargin = (window.innerWidth - 2*108) / 2;
+                d3.select ('#DayRange').style ('margin-left', leftMargin + 'px');
+            }
+
+            // re-center the table when the page was resized...
+            d3.select(window).on ('resize', function () { CenterTable (); } );
+
+            // eventWindowLoaded: used to be sure that everything has been loaded first 
+            window.addEventListener ('load', eventWindowLoaded, false);     
+            function eventWindowLoaded ()
+            {
+                CenterTable ();
+                D3App ();
+            }
+
+        </script>
+
 
         <style>
+
             .block
             {
                 float:            left; 
@@ -21,68 +49,17 @@
                 font-size:        12px;
                 color:            #000000;
             }
+
         </style>
 
     </head>
 
     <body>
 
-        <div id='DeathRates' style='margin-left:30px'>
+        <div id='DayRange' style='margin-left:30px'>
             <div id='block_0' class='block' style='border-top-left-radius: 8px;border-bottom-left-radius: 8px'>a </div>
             <div id='block_1' class='block' style='border-top-right-radius: 8px;border-bottom-right-radius: 8px'>c </div>
         </div>
-
-        <script type="text/javascript">
-
-            // Add a wide left margin so that the table seems centered
-            var CenterTable = function ()
-            {
-                var leftMargin = (window.innerWidth - 2*108) / 2;
-                d3.select ('#DeathRates').style ('margin-left', leftMargin + 'px');
-            }
-
-            // on creation of this page, center the results.
-            CenterTable ();
-
-            // Also re-center the table when the page was resized...
-            d3.select(window).on ('resize', function () { CenterTable (); } );
-
-
-            var dataFile = 'ONCovidCases_DateRange.csv';
-
-            //
-            // Function used to parse the CSV.  
-            // 
-            var rowConverter = function (d) 
-            {
-                var timeZoneAdjustment = 1000*60*60*5; // in millisecs...
-
-                return [  new Date (new Date (d['start_date']).getTime() + timeZoneAdjustment),
-                          new Date (new Date (d['end_date']).getTime() + timeZoneAdjustment)     ];
-            };
-
-            //
-            // Read the CSV...
-            //
-            d3.csv (dataFile, rowConverter).then (function (data) 
-            {
-                console.log (data);
- 
-                var labels = [ 'Start Date', 'End Date' ];
-
-                for (var i = 0; i < 2; i++)
-                {
-                    var output = '<strong>' + labels[i] + '</strong>';
-                    output += '<hr>';
-                    output += (data[0][i]).toDateString();
-
-                    d3.select ('#block_' + i).node().innerHTML = output;
-                }
-
-                console.log (data);
-            } ); 
-
-        </script>
 
     </body>
 
