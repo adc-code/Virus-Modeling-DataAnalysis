@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+    <head>
+
+        <meta charset="utf-8">
+        <title>Ontario PHU Outcomes by Age</title>
+
+        <script type="text/javascript" src="d3.v5.js"></script>
+        <script type="text/javascript" src="ONTCovidCases_PHUAgeOutcomes.js"></script>
+
+        <script type="text/javascript">
+
+            // Add a wide left margin so that the table seems centered
+            var CenterContents = function ()
+            {
+                var leftMargin = (window.innerWidth - 710) / 2;
+                d3.select ('#AgeOutcomes').style ('margin-left', leftMargin + 'px');
+            }
+
+            // Also re-center the contents when the page was resized...
+            window.addEventListener ('resize', CenterContents);
+
+            //
+            // eventWindowLoaded: used to be sure that everything has been loaded first 
+            // 
+            window.addEventListener ('load', eventWindowLoaded, false);     
+            function eventWindowLoaded ()
+            {
+                CenterContents ();
+                D3App ();
+            }
+
+        </script>
+
+        <style>
+
+            .button 
+            {
+                position:         relative;
+                text-align:       center;
+
+                float:            bottom;
+                vertical-align:   middle;
+
+                background-color: #cccccc;
+                border-radius:    7px;
+                border-style:     solid;
+                border-color:     white;
+                border-width:     3px;
+                width:            125px; 
+                padding:          7px 4px; 
+                font-family:      Helvetica, sans-serif;
+                font-size:        12px;
+                color:            #000000;
+                cursor:           pointer;
+
+                /* Prevent text selection */
+                -webkit-user-select: none;  /* Safari */
+                -ms-user-select:     none;  /* IE 10+ and Edge */
+                user-select:         none;  /* Standard syntax */
+            }
+
+            .button:hover
+            {
+                border-style:     solid;
+                border-color:     #000000; /*#ff4000;*/
+            } 
+
+            .button_sel
+            {
+                background-color: #4d4d4d;
+                color:            #ffffff;
+            }
+
+            .textOutput
+            {
+                font-family:      Helvetica, sans-serif;
+                font-size:        12px;
+                color:            #000000;
+            }
+
+            #total
+            {
+                border-radius:    5px;
+                border-style:     solid;
+                border-color:     #000000;
+                border-width:     thin;
+                text-align:       center;
+                font-family:      Helvetica, sans-serif;
+                font-size:        12px;
+                width:            125px; 
+                height:           40px;
+                padding:          7px 2px; 
+                margin-left:      3px;
+            }
+
+            .SelList
+            {
+                font-family:      Helvetica, sans-serif;
+                font-size:        13px;
+                border-radius:    5px;
+                border-style:     solid;
+                border-color:     #000000;
+                border-width:     thin;
+                padding:          7px; 
+                background-color: #cccccc;
+                width:            490px;
+                margin-left:      165px;
+                margin-bottom:    5px;
+            }
+
+        </style>
+
+    </head>
+
+    <body>
+
+        <div id='AgeOutcomes'>
+
+            <div class='SelList'> Public Health Unit: <select id='PHU_SelList'> </select> </div>
+
+            <div>
+                <div id='controls' style='float: left'>
+                    <div id='btnID_0' style='margin-top:4px' class='button datatype' stateID='0'> Total Cases </div>
+                    <div style='height:7px;'> </div>
+                    <div id='btnID_1' style='float:bottom' class='button datatype' stateID='1'> Resolved Cases </div>
+                    <div id='btnID_2' style='float:bottom' class='button datatype' stateID='2'> Fatal Cases </div>
+                    <div id='btnID_3' style='float:bottom' class='button datatype' stateID='3'> Not Resolved Cases </div>
+                    <div style='height:11px;'> </div>
+                    <div id='btnID_4' style='float:bottom' class='button datarange button_sel' stateID='1'> Absolute Values </div>
+                    <div id='btnID_5' style='float:bottom' class='button datarange' stateID='2'> Percentage in Group  </div>
+                    <div id='btnID_6' style='float:bottom' class='button datarange' stateID='3'> Percentage in Ontario </div>
+                    <div style='height:18px;'> </div>
+                    <div id='total'> Total </div>
+                </div>
+
+                <div style='float: left'>
+                    <div id='graph'> </div>
+                </div>
+            </div>
+
+        </div>
+
+    </body>
+
+</html>
+
+
