@@ -93,6 +93,48 @@ function D3App ()
            .attr ('opacity', 0)
            .attr ('id', 'tt_circ');
 
+        svg.append ('clipPath')
+           .attr ('id', 'graphArea')
+           .append ('rect')
+           .attr ('x', 0)
+           .attr ('y', -1)
+           .attr ('width', width+2)
+           .attr ('height', height+2);
+
+
+        //
+        // LookUpDate : used to find the closest index in the dataset for a particular date
+        //
+        function LookUpDate (value, lowerIndex, upperIndex)
+        {
+            // Lookup the closest day to this date...
+            // So when going from pixels to a date, the xScale function nicely interpolates
+            // the date values for you.  However the governments data has some missing days 
+            // that we need to take into account.
+
+            var midIndex = Math.round ( (upperIndex + lowerIndex) / 2 );
+
+            //console.log (lowerIndex, upperIndex, midIndex);
+
+            if ( value == dataset[midIndex][0] )
+                return midIndex;
+
+            if ( midIndex == lowerIndex )
+                return lowerIndex;
+            else if ( upperIndex == midIndex )
+                return upperIndex;
+
+            if (value >= dataset[lowerIndex][0] && value <= dataset[midIndex][0])
+            {
+                return LookUpDate (value, lowerIndex, midIndex);
+            }
+            else
+            {
+                return LookUpDate (value, midIndex, upperIndex);
+            }
+        }
+
+
         var notResLine = d3.line ()
                            .x (function(d) { return xScale (d[0]); })
                            .y (function(d) { return yScale (d[1]); })
@@ -103,6 +145,7 @@ function D3App ()
                                   .attr ('id', 'notResLine')
                                   .attr ('stroke', colours [0] )
                                   .attr ('fill', 'none')
+                                  .attr ('clip-path', 'url(#graphArea)')
                                   .attr ('stroke-width', 2)
                                   .attr ('d', notResLine)
                                   .on ('mousemove', function(d, i)
@@ -114,22 +157,7 @@ function D3App ()
                                           // Get the corresponding date...
                                           var selectedDate = xScale.invert (xPosition);
 
-                                          // Lookup the closest day to this date...
-                                          // So when going from pixels to a date, the xScale function nicely interpolates
-                                          // the date values for you.  However the governments data has some missing days 
-                                          // that we need to take into account.
-                                          var dateValSelected = 100 * selectedDate.getMonth() + selectedDate.getDate();
-
-                                          var index = 0;
-                                          for (var i = 0; i < dataset.length; i++)
-                                          {
-                                              var dateValInDataset = 100 * dataset[i][0].getMonth() + dataset[i][0].getDate();
-                                              if (dateValInDataset >= dateValSelected)
-                                              {
-                                                  index = i;
-                                                  break;
-                                               }
-                                          }
+                                          var index = LookUpDate (selectedDate, 0, dataset.length-1);
 
                                           d3.select ('#tt_circ')
                                             .attr ('cx', xScale (dataset[index][0]) )
