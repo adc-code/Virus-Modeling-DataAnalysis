@@ -113,7 +113,7 @@ function D3MapApp ()
             d['PHU_Name'], d['Outcome'], parseInt (d['MaxValue']),
             parseInt (d['<20']), parseInt (d['20s']), parseInt (d['30s']), 
             parseInt (d['40s']), parseInt (d['50s']), parseInt (d['60s']),
-            parseInt (d['70s']), parseInt (d['80s']), parseInt (d['90s']),
+            parseInt (d['70s']), parseInt (d['80s']), parseInt (d['90+']),
         ];  
     }
 
